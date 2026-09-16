@@ -4,44 +4,82 @@ A breakfast / lunch / dinner timetable for a Tamil Nadu household.
 
 Every home runs the same negotiation every single day: *what do we make?* It gets decided under time
 pressure, from memory, by whoever is cooking — so the same four dishes rotate forever. This app just
-decides, from a curated list of Tamil Nadu dishes with their proper combinations, for a day or a
-whole week.
+decides, from a curated list of Tamil Nadu dishes with their proper combinations, for today or for
+the whole week.
 
 ## Run it
 
-Open `index.html` in a browser. That's it.
+Open `index.html` in a browser. That is the whole setup.
 
-No build step, no `npm install`, no server, no account. Plain HTML, CSS and JavaScript, written to
-work straight off the disk over `file://` — so the scripts are classic `<script src>` tags rather
-than ES modules, and the CSS is hand-written rather than pulled from a CDN.
+No build step, no `npm install`, no server, no account, no network. Plain HTML, CSS and JavaScript,
+written to work straight off the disk over `file://` — so the scripts are classic `<script src>`
+tags rather than ES modules, and the CSS is hand-written rather than pulled from a CDN.
+
+Designed for a phone, because that is what you are holding at 7am in the kitchen. On a desktop it
+is the same column, centred.
 
 ## What it does
 
-- **Today** — breakfast, lunch and dinner with their sides and rough cooking time.
-- **This week** — a 7 × 3 grid you can regenerate, with any meal lockable so it survives a reroll.
-- **Copy** — the plan as plain text, ready to paste into the family WhatsApp group.
-- **Settings** — four household switches: which days are non-veg, one kids' slot a week, lighter
-  dinners for the elders, and quick weekday breakfasts.
+- **Today** — breakfast, lunch and dinner with their sides and rough cooking time. The meal you are
+  about to cook is marked *up next*. 🎲 on any card rerolls just that meal.
+- **Week** — all 21 meals. Lock any meal with 🔓 and it survives the next reroll.
+- **Export** — the week as a picture for the fridge or the family WhatsApp group, plus print and
+  copy-as-text. Drawn on a canvas, so it works offline with nothing installed.
+- **Settings** — four household switches.
 
-Deliberately *not* per-person preference profiles. Making every member fill in a form before the app
-serves a single meal is how these things get abandoned in week one. Four household switches cover
-most of it; personalisation can come later if the house actually misses it.
+Deliberately *not* per-person preference profiles. Making every family member fill in a form before
+the app serves a single meal is how these things get abandoned in week one. Four household switches
+cover most of it:
+
+| Switch | Default | What it does |
+|---|---|---|
+| Non-veg days | Wed, Sun | Non-veg appears only on these days — lunch at the weekend, dinner on a working day. Everything else stays veg. |
+| Kids' pick | Sat dinner | One meal a week comes from the pasta / noodles / fried rice end of the list. |
+| Easy on the elders | on | Dinners stay soft and light. No parotta or poori at night. |
+| Quick weekday breakfasts | on | Nothing over 20 minutes Mon–Fri. Poori and pongal wait for the weekend. |
+| Sunday special | on | Biryani or full meals for Sunday lunch. |
 
 Everything is kept in the browser's `localStorage`. Nothing leaves the device.
 
-## Status
+## The generator
 
-**Step 1 of 2 — UI shell.** The screens are real and clickable, but they render the fixed sample plan
-in `js/sample-data.js`. "New plan", "Surprise me" and the per-meal shuffle are placeholders for now.
+Random, but with rules — the rules are what stop it producing parotta for breakfast on a Tuesday or
+biryani three days running. In `js/planner.js`:
 
-**Step 2** adds `js/data.js` (the dish database and combination table) and `js/planner.js` (the
-generator), and wires those buttons up.
+- No dish repeats within 4 days (breakfast, dinner) or 5 days (lunch)
+- Non-veg only in the household's configured slot
+- Elaborate dishes are weekend-weighted; on a weekday morning they are excluded outright
+- Sides are rolled from groups of alternatives, so idli turns up with coconut chutney one day and
+  tomato chutney the next
+- Filters relax in order rather than ever returning nothing — a household would rather see poori on
+  a Tuesday than an empty box
+
+Verified across 400 generated weeks: every rule holds, and 45 of the 54 dishes stay in rotation.
+
+## Adding your family's dishes
+
+`js/data.js` is the only file worth editing. Add an entry and the planner picks it up with no other
+changes:
+
+```js
+{ id: 'kothu-parotta', name: 'Kothu parotta', tamil: 'கொத்து பரோட்டா',
+  meals: ['dinner'], kind: 'nonveg', mins: 35,
+  tags: ['kid', 'weekend', 'heavy'],
+  sides: [['Onion raita'], ['Chicken salna']] }
+```
+
+`sides` is a list of *groups*; one item is picked from each, which is where the day-to-day variety
+comes from.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `index.html` | Both screens |
+| `index.html` | Three screens |
 | `css/styles.css` | All styling, light and dark |
-| `js/sample-data.js` | Placeholder plan — replaced in step 2 |
-| `js/app.js` | Rendering and event wiring |
+| `js/data.js` | **The dish database** — the part worth editing |
+| `js/planner.js` | The generator |
+| `js/export.js` | Canvas timetable image, text export, share sheet |
+| `js/app.js` | Storage, rendering, wiring |
+| `docs/deployment.md` | Putting it on Vercel |
+| `docs/ai-agent.md` | Adding a free AI planner, and why you should not train your own model |

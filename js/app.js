@@ -1,20 +1,17 @@
 /* ------------------------------------------------------------------
-   UI shell.
-   Step 1: renders the hardcoded sample plan from js/sample-data.js.
-   Step 2: the same render functions get fed by js/planner.js instead,
-   and the generate / shuffle buttons stop being placeholders.
+   Storage, rendering and wiring.
+
+   One source of truth: a week. "Today" is today's row of it, so
+   rerolling tonight's dinner on the Today screen is the same edit as
+   rerolling it in the week view.
    ------------------------------------------------------------------ */
 
 (function () {
   'use strict';
 
-  var MEALS = ['breakfast', 'lunch', 'dinner'];
+  var STORE_KEY = 'food-menu/v1';
 
-  var MEAL_LABEL = {
-    breakfast: 'Breakfast',
-    lunch: 'Lunch',
-    dinner: 'Dinner'
-  };
+  var MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
 
   var BADGE_LABEL = {
     nonveg: 'Non-veg',
@@ -23,12 +20,15 @@
     quick: 'Quick'
   };
 
-  var DAY_FULL = {
-    Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday',
-    Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday'
+  var state = {
+    settings: Planner.defaultSettings(),
+    week: null,
+    locked: {}
   };
 
-  var locked = {};   // "2-lunch" -> true
+  var currentRange = 'day';
+  var currentScreen = 'plan';
+  var toastTimer;
 
   function $(id) { return document.getElementById(id); }
 
@@ -39,6 +39,38 @@
     return node;
   }
 
+  /* ---------------- storage ----------------
+     localStorage throws in private mode and in some file:// contexts,
+     so every access is guarded and the app stays usable without it. */
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY);
+      if (!raw) { return false; }
+      var saved = JSON.parse(raw);
+      if (!saved || !saved.week || !saved.week.length) { return false; }
+
+      state.settings = Object.assign(Planner.defaultSettings(), saved.settings || {});
+      state.week = saved.week;
+      state.locked = saved.locked || {};
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        settings: state.settings,
+        week: state.week,
+        locked: state.locked
+      }));
+    } catch (e) { /* nothing worth doing — the plan still works this session */ }
+  }
+
+  /* ---------------- shared bits ---------------- */
+
   function badgeNodes(badges) {
     var frag = document.createDocumentFragment();
     (badges || []).forEach(function (b) {
@@ -48,33 +80,43 @@
     return frag;
   }
 
-  /* ---------------- day view ---------------- */
+  function regenerate() {
+    state.week = Planner.generateWeek(state.settings, state.locked, state.week);
+    save();
+    renderAll();
+  }
 
-  function renderDay(plan) {
-    var today = new Date();
-    $('day-date').textContent = today.toLocaleDateString(undefined, {
+  /* ---------------- today ---------------- */
+
+  function renderDay() {
+    var idx = Planner.todayIndex();
+    var row = state.week[idx];
+    var nowMeal = Planner.currentMeal();
+
+    $('day-date').textContent = new Date().toLocaleDateString(undefined, {
       weekday: 'long', day: 'numeric', month: 'long'
     });
 
     var list = $('day-meals');
     list.textContent = '';
 
-    MEALS.forEach(function (meal) {
-      var slot = plan[meal];
+    MEAL_ORDER.forEach(function (meal) {
+      var slot = row[meal];
       if (!slot) { return; }
 
-      var card = el('article', 'meal-card');
+      var card = el('article', 'meal-card' + (meal === nowMeal ? ' is-now' : ''));
       card.setAttribute('data-meal', meal);
 
       var head = el('div', 'meal-head');
       head.appendChild(el('span', 'meal-label', MEAL_LABEL[meal]));
       head.appendChild(el('span', 'meal-time', slot.mins + ' min'));
+      if (meal === nowMeal) { head.appendChild(el('span', 'now-pill', 'Up next')); }
       head.appendChild(el('span', 'spacer'));
 
-      var shuffle = el('button', 'btn btn-icon', '🎲');
+      var shuffle = el('button', 'btn btn-round btn-icon', '🎲');
       shuffle.title = 'Change just this meal';
       shuffle.setAttribute('aria-label', 'Change ' + MEAL_LABEL[meal]);
-      shuffle.addEventListener('click', function () { notYet(); });
+      shuffle.addEventListener('click', function () { rerollSlot(idx, meal); });
       head.appendChild(shuffle);
 
       card.appendChild(head);
@@ -88,43 +130,57 @@
       }
 
       if (slot.badges && slot.badges.length) {
-        var row = el('div', 'badges');
-        row.appendChild(badgeNodes(slot.badges));
-        card.appendChild(row);
+        var badges = el('div', 'badges');
+        badges.appendChild(badgeNodes(slot.badges));
+        card.appendChild(badges);
       }
 
       list.appendChild(card);
     });
   }
 
-  /* ---------------- week view ---------------- */
+  function rerollSlot(dayIndex, meal) {
+    var key = dayIndex + '-' + meal;
 
-  function renderWeek(week) {
-    var grid = $('week-grid');
-    grid.textContent = '';
+    if (state.locked[key]) {
+      toast('That meal is locked — unlock it first');
+      return;
+    }
 
-    grid.appendChild(el('div', 'col-head', ''));
-    MEALS.forEach(function (meal) {
-      grid.appendChild(el('div', 'col-head', MEAL_LABEL[meal]));
-    });
+    state.week[dayIndex][meal] = Planner.regenerateSlot(state.week, dayIndex, meal, state.settings);
+    save();
+    renderAll();
+  }
 
-    week.forEach(function (day, dayIndex) {
-      var isWeekend = day.day === 'Sat' || day.day === 'Sun';
-      var head = el('div', 'row-head' + (isWeekend ? ' is-weekend' : ''));
-      head.appendChild(el('span', null, day.day));
-      head.appendChild(el('span', 'day-sub', DAY_FULL[day.day] || ''));
-      grid.appendChild(head);
+  /* ---------------- week ---------------- */
 
-      MEALS.forEach(function (meal) {
-        grid.appendChild(cellNode(day[meal], dayIndex, meal));
+  function renderWeek() {
+    var list = $('week-list');
+    var todayIdx = Planner.todayIndex();
+    list.textContent = '';
+
+    state.week.forEach(function (row, dayIndex) {
+      var isWeekend = row.day === 'Sat' || row.day === 'Sun';
+      var isToday = dayIndex === todayIdx;
+
+      var head = el('div', 'day-head' +
+        (isToday ? ' is-today' : '') + (isWeekend ? ' is-weekend' : ''));
+      head.appendChild(el('span', null, DAY_FULL[row.day] || row.day));
+      if (isToday) { head.appendChild(el('span', 'sub', 'today')); }
+      list.appendChild(head);
+
+      MEAL_ORDER.forEach(function (meal) {
+        list.appendChild(cellNode(row[meal], dayIndex, meal));
       });
     });
   }
 
   function cellNode(slot, dayIndex, meal) {
     var key = dayIndex + '-' + meal;
-    var cell = el('div', 'cell' + (locked[key] ? ' is-locked' : ''));
-    cell.setAttribute('data-meal-label', MEAL_LABEL[meal]);
+    var isLocked = !!state.locked[key];
+    var cell = el('div', 'cell' + (isLocked ? ' is-locked' : ''));
+
+    cell.appendChild(el('div', 'cell-meal', MEAL_LABEL[meal]));
 
     if (!slot) { return cell; }
 
@@ -135,60 +191,37 @@
     }
 
     if (slot.badges && slot.badges.length) {
-      var row = el('div', 'cell-badges');
-      row.appendChild(badgeNodes(slot.badges));
-      cell.appendChild(row);
+      var badges = el('div', 'cell-badges');
+      badges.appendChild(badgeNodes(slot.badges));
+      cell.appendChild(badges);
     }
 
-    var lock = el('button', 'cell-lock' + (locked[key] ? ' is-on' : ''), locked[key] ? '🔒' : '🔓');
-    lock.title = locked[key] ? 'Locked — a new plan will keep this' : 'Lock this meal';
+    var lock = el('button', 'cell-lock' + (isLocked ? ' is-on' : ''), isLocked ? '🔒' : '🔓');
+    lock.title = isLocked ? 'Locked — a new plan keeps this' : 'Lock this meal';
     lock.setAttribute('aria-label', lock.title);
     lock.addEventListener('click', function () {
-      locked[key] = !locked[key];
-      renderWeek(SAMPLE_WEEK);
+      if (isLocked) { delete state.locked[key]; }
+      else { state.locked[key] = true; }
+      save();
+      renderWeek();
     });
     cell.appendChild(lock);
 
     return cell;
   }
 
-  /* ---------------- copy as text ---------------- */
+  /* ---------------- export ---------------- */
 
-  function planAsText() {
-    if (currentRange === 'day') {
-      var lines = ['🍛 Today'];
-      MEALS.forEach(function (meal) {
-        var slot = SAMPLE_DAY[meal];
-        if (slot) { lines.push(MEAL_LABEL[meal] + ': ' + slotLine(slot)); }
-      });
-      return lines.join('\n');
-    }
-
-    var out = ['🍛 This week'];
-    SAMPLE_WEEK.forEach(function (day) {
-      out.push('');
-      out.push(DAY_FULL[day.day] || day.day);
-      MEALS.forEach(function (meal) {
-        if (day[meal]) { out.push('  ' + MEAL_LABEL[meal] + ': ' + slotLine(day[meal])); }
-      });
-    });
-    return out.join('\n');
+  function renderExport() {
+    Exporter.render($('export-canvas'), state.week, { date: new Date() });
   }
 
-  function slotLine(slot) {
-    if (slot.sides && slot.sides.length) {
-      return slot.dish + ' with ' + slot.sides.join(', ');
-    }
-    return slot.dish;
-  }
+  function copyText() {
+    var text = Exporter.asText(state.week);
 
-  function copyPlan() {
-    var text = planAsText();
-
-    // navigator.clipboard is unavailable on file:// in some browsers, so fall back.
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(
-        function () { toast('Plan copied'); },
+        function () { toast('Menu copied'); },
         function () { legacyCopy(text); }
       );
       return;
@@ -196,6 +229,7 @@
     legacyCopy(text);
   }
 
+  /* navigator.clipboard is blocked on file:// in some browsers. */
   function legacyCopy(text) {
     var ta = el('textarea');
     ta.value = text;
@@ -207,13 +241,49 @@
     var ok = false;
     try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
     document.body.removeChild(ta);
-    toast(ok ? 'Plan copied' : 'Could not copy — select the text manually');
+    toast(ok ? 'Menu copied' : 'Could not copy automatically');
+  }
+
+  /* ---------------- settings ---------------- */
+
+  function buildDayPicker() {
+    var box = $('nonveg-days');
+    box.textContent = '';
+
+    DAY_NAMES.forEach(function (day) {
+      var on = state.settings.nonVegDays.indexOf(day) !== -1;
+      var btn = el('button', on ? 'is-on' : null, day);
+      btn.setAttribute('aria-pressed', String(on));
+      btn.title = day + ': non-veg at ' + Planner.nonVegMealFor(day);
+
+      btn.addEventListener('click', function () {
+        var i = state.settings.nonVegDays.indexOf(day);
+        if (i === -1) { state.settings.nonVegDays.push(day); }
+        else { state.settings.nonVegDays.splice(i, 1); }
+        buildDayPicker();
+        settingsChanged();
+      });
+
+      box.appendChild(btn);
+    });
+  }
+
+  function syncSettingsUI() {
+    $('kids-slot').value = state.settings.kidsSlot;
+    $('opt-elder').checked = state.settings.elderFriendly;
+    $('opt-quick').checked = state.settings.quickBreakfast;
+    $('opt-sunday').checked = state.settings.sundaySpecial;
+    buildDayPicker();
+  }
+
+  /* A settings change that does not rebuild the plan is invisible, so
+     the plan is regenerated immediately — locked meals still survive. */
+  function settingsChanged() {
+    regenerate();
+    toast('Plan updated');
   }
 
   /* ---------------- chrome ---------------- */
-
-  var currentRange = 'day';
-  var toastTimer;
 
   function toast(message) {
     var node = $('toast');
@@ -223,15 +293,14 @@
     toastTimer = setTimeout(function () { node.classList.remove('is-visible'); }, 2200);
   }
 
-  function notYet() {
-    toast('Mock — the generator lands in step 2');
-  }
-
   function showScreen(name) {
-    $('screen-plan').hidden = name !== 'plan';
-    $('screen-settings').hidden = name !== 'settings';
-    $('tab-plan').setAttribute('aria-selected', String(name === 'plan'));
-    $('tab-settings').setAttribute('aria-selected', String(name === 'settings'));
+    currentScreen = name;
+    ['plan', 'export', 'settings'].forEach(function (s) {
+      $('screen-' + s).hidden = s !== name;
+      $('tab-' + s).setAttribute('aria-selected', String(s === name));
+    });
+    if (name === 'export') { renderExport(); }
+    window.scrollTo(0, 0);
   }
 
   function showRange(range) {
@@ -242,35 +311,88 @@
     $('range-week').setAttribute('aria-selected', String(range === 'week'));
   }
 
-  function buildDayPicker() {
-    var box = $('nonveg-days');
-    var defaults = { Sun: true, Wed: true };
-
-    ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(function (day) {
-      var label = el('label', defaults[day] ? 'is-on' : null);
-      label.textContent = day;
-      label.addEventListener('click', function () {
-        label.classList.toggle('is-on');
-      });
-      box.appendChild(label);
-    });
+  function renderAll() {
+    renderDay();
+    renderWeek();
+    if (currentScreen === 'export') { renderExport(); }
   }
 
   function init() {
+    if (!load()) {
+      state.week = Planner.generateWeek(state.settings, {}, null);
+      save();
+    }
+
     $('tab-plan').addEventListener('click', function () { showScreen('plan'); });
+    $('tab-export').addEventListener('click', function () { showScreen('export'); });
     $('tab-settings').addEventListener('click', function () { showScreen('settings'); });
 
     $('range-day').addEventListener('click', function () { showRange('day'); });
     $('range-week').addEventListener('click', function () { showRange('week'); });
 
-    $('btn-regenerate').addEventListener('click', notYet);
-    $('btn-surprise').addEventListener('click', notYet);
-    $('btn-reset').addEventListener('click', notYet);
-    $('btn-copy').addEventListener('click', copyPlan);
+    $('btn-regenerate').addEventListener('click', function () {
+      regenerate();
+      toast(Object.keys(state.locked).length ? 'New plan — locked meals kept' : 'New plan');
+    });
 
-    buildDayPicker();
-    renderDay(SAMPLE_DAY);
-    renderWeek(SAMPLE_WEEK);
+    /* "Right now" means the meal you are actually about to cook. */
+    $('btn-surprise').addEventListener('click', function () {
+      var meal = Planner.currentMeal();
+      showRange('day');
+      rerollSlot(Planner.todayIndex(), meal);
+      toast('New idea for ' + MEAL_LABEL[meal].toLowerCase());
+    });
+
+    $('btn-copy').addEventListener('click', copyText);
+
+    $('btn-download').addEventListener('click', function () {
+      Exporter.download($('export-canvas'), 'menu-week.png').then(function (ok) {
+        toast(ok ? 'Image saved' : 'Could not save the image');
+      });
+    });
+
+    $('btn-print').addEventListener('click', function () { window.print(); });
+
+    $('btn-share').addEventListener('click', function () {
+      Exporter.share($('export-canvas'), Exporter.asText(state.week)).then(function (result) {
+        if (result === 'unsupported') { toast('Sharing needs a phone browser — save the image instead'); }
+        else if (result === 'failed') { toast('Could not open the share sheet'); }
+      });
+    });
+
+    $('kids-slot').addEventListener('change', function (e) {
+      state.settings.kidsSlot = e.target.value;
+      settingsChanged();
+    });
+
+    $('opt-elder').addEventListener('change', function (e) {
+      state.settings.elderFriendly = e.target.checked;
+      settingsChanged();
+    });
+
+    $('opt-quick').addEventListener('change', function (e) {
+      state.settings.quickBreakfast = e.target.checked;
+      settingsChanged();
+    });
+
+    $('opt-sunday').addEventListener('change', function (e) {
+      state.settings.sundaySpecial = e.target.checked;
+      settingsChanged();
+    });
+
+    $('btn-reset').addEventListener('click', function () {
+      try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
+      state.settings = Planner.defaultSettings();
+      state.locked = {};
+      state.week = Planner.generateWeek(state.settings, {}, null);
+      save();
+      syncSettingsUI();
+      renderAll();
+      toast('Back to defaults');
+    });
+
+    syncSettingsUI();
+    renderAll();
     showScreen('plan');
     showRange('day');
   }
