@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What's Cooking Today</title>
+<meta name="description" content="A daily and weekly meal timetable for a Tamil Nadu household.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍛</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🍛</span>
+      <div class="brand-text">
+        <h1>இன்று என்ன சமையல்?</h1>
+        <p>What's cooking today &mdash; a menu for the whole house</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab" id="tab-plan" role="tab" aria-selected="true" aria-controls="screen-plan">Plan</button>
+      <button class="tab" id="tab-settings" role="tab" aria-selected="false" aria-controls="screen-settings">Settings</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ================= PLAN ================= -->
+  <section class="screen" id="screen-plan" role="tabpanel" aria-labelledby="tab-plan">
+
+    <div class="toolbar">
+      <div class="segmented" role="tablist" aria-label="Plan range">
+        <button id="range-day" role="tab" aria-selected="true">Today</button>
+        <button id="range-week" role="tab" aria-selected="false">This week</button>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn" id="btn-regenerate">🎲 New plan</button>
+      <button class="btn" id="btn-copy">📋 Copy</button>
+    </div>
+
+    <!-- ---- day ---- -->
+    <div id="view-day">
+      <p class="date-line" id="day-date"></p>
+      <div class="meal-list" id="day-meals"></div>
+      <button class="btn btn-primary surprise" id="btn-surprise">
+        ✨ Surprise me &mdash; what do I cook right now?
+      </button>
+    </div>
+
+    <!-- ---- week ---- -->
+    <div id="view-week" hidden>
+      <p class="date-line">
+        Tap 🔓 on any meal to lock it, then hit <strong>New plan</strong> &mdash; locked meals stay put.
+      </p>
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+
+  </section>
+
+  <!-- ================= SETTINGS ================= -->
+  <section class="screen" id="screen-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+
+    <p class="section-title">The house</p>
+    <div class="panel">
+
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Non-veg days</h3>
+          <p>Non-veg shows up only on the days you pick. Every other meal stays veg.</p>
+          <div class="day-picker" id="nonveg-days"></div>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Kids' pick</h3>
+          <p>One meal a week goes to whatever the children actually want &mdash; pasta, noodles, fried rice.</p>
+        </div>
+        <div class="setting-control">
+          <select class="field" id="kids-slot">
+            <option value="sat-dinner" selected>Saturday dinner</option>
+            <option value="sun-dinner">Sunday dinner</option>
+            <option value="fri-dinner">Friday dinner</option>
+            <option value="sun-lunch">Sunday lunch</option>
+            <option value="none">Skip it</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Easy on the elders at night</h3>
+          <p>Dinners stay soft, light and low-oil. Kanji and idiyappam turn up about once a week.</p>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="opt-elder" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Quick weekday breakfasts</h3>
+          <p>Nothing over 20 minutes Monday to Friday. Poori and pongal wait for the weekend.</p>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="opt-quick" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Sunday special</h3>
+          <p>Biryani or a full banana-leaf meals for Sunday lunch.</p>
+        </div>
+        <div class="setting-control">
+          <label class="switch">
+            <input type="checkbox" id="opt-sunday" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="section-title">Data</p>
+    <div class="panel">
+      <div class="setting">
+        <div class="setting-text">
+          <h3>Start over</h3>
+          <p>Clears the saved plan and settings from this browser.</p>
+        </div>
+        <div class="setting-control">
+          <button class="btn" id="btn-reset">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="note">
+      Everything is stored in this browser only. No account, no server, nothing leaves the device.
+    </p>
+
+  </section>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/sample-data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
