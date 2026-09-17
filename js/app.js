@@ -124,13 +124,10 @@
 
   function chips(slot) {
     var frag = document.createDocumentFragment();
-    if (!slot) { return frag; }
-    if (slot.tags.indexOf('kids') !== -1) { frag.appendChild(el('span', 'chip chip-kids', "Kids' pick")); }
-    if (state.settings.health === 'lean') {
-      (slot.health || []).forEach(function (h) {
-        frag.appendChild(el('span', 'chip chip-health', HEALTH_LABEL[h] || h));
-      });
-    }
+    if (!slot || state.settings.health !== 'lean') { return frag; }
+    (slot.health || []).forEach(function (h) {
+      frag.appendChild(el('span', 'chip chip-health', HEALTH_LABEL[h] || h));
+    });
     return frag;
   }
 
@@ -648,8 +645,7 @@
       { label: 'Egg every lunch', apply: function (g) {
           DAY_NAMES.forEach(function (d) { g[d].lunch = 'egg'; }); } },
       { label: 'Non-veg weekends', apply: function (g) {
-          g.Sat.lunch = 'chicken'; g.Sun.lunch = 'mutton'; } },
-      { label: 'Fish midweek', apply: function (g) { g.Wed.dinner = 'fish'; } }
+          g.Sat.lunch = 'chicken'; g.Sun.lunch = 'mutton'; } }
     ];
 
     fills.forEach(function (f) {
@@ -690,8 +686,6 @@
     $('opt-lean').checked = state.settings.health === 'lean';
     $('opt-light').checked = state.settings.lightDinners;
     $('opt-quick').checked = state.settings.quickBreakfast;
-    $('opt-sunday').checked = state.settings.sundaySpecial;
-    $('kids-slot').value = state.settings.kidsSlot;
     renderProteinGrid();
   }
 
@@ -929,18 +923,13 @@
       toast(e.target.checked ? 'Leaning healthier' : 'Everyday cooking');
     });
 
-    [['opt-light', 'lightDinners'], ['opt-quick', 'quickBreakfast'], ['opt-sunday', 'sundaySpecial']]
+    [['opt-light', 'lightDinners'], ['opt-quick', 'quickBreakfast']]
       .forEach(function (pair) {
         $(pair[0]).addEventListener('change', function (e) {
           state.settings[pair[1]] = e.target.checked;
           settingsChanged();
         });
       });
-
-    $('kids-slot').addEventListener('change', function (e) {
-      state.settings.kidsSlot = e.target.value;
-      settingsChanged();
-    });
 
     $('btn-reset').addEventListener('click', function () {
       try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }

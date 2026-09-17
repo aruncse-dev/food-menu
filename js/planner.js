@@ -39,9 +39,7 @@ var Planner = (function () {
       protein: protein,
       health: 'everyday',        /* everyday | lean */
       lightDinners: true,
-      quickBreakfast: true,
-      sundaySpecial: true,
-      kidsSlot: 'Sat-dinner'
+      quickBreakfast: true
     };
   }
 
@@ -85,7 +83,6 @@ var Planner = (function () {
       if (settings.lightDinners && meal === 'dinner' && hasTag(d, 'heavy')) { return false; }
       if (opts.quickCap && d.mins > 20) { return false; }
       if (opts.specialOnly && !hasTag(d, 'special')) { return false; }
-      if (opts.kidsOnly && !hasTag(d, 'kid')) { return false; }
 
       /* A working morning has no room for poori. */
       if (weekday && meal === 'breakfast' && hasTag(d, 'weekend')) { return false; }
@@ -134,15 +131,15 @@ var Planner = (function () {
   function pickMain(meal, day, dayIndex, settings, lastSeen, excludeId) {
     var base = {
       quickCap: settings.quickBreakfast && meal === 'breakfast' && !!WEEKDAYS[day],
-      specialOnly: settings.sundaySpecial && day === 'Sun' && meal === 'lunch',
-      kidsOnly: settings.kidsSlot === day + '-' + meal
+      /* Sunday lunch is always the big one. This used to be a switch,
+         but nobody was ever going to ask for a worse Sunday. */
+      specialOnly: day === 'Sun' && meal === 'lunch'
     };
 
     var relaxations = [
       base,
       merge(base, { quickCap: false }),
-      merge(base, { quickCap: false, specialOnly: false }),
-      merge(base, { quickCap: false, specialOnly: false, kidsOnly: false })
+      merge(base, { quickCap: false, specialOnly: false })
     ];
 
     var candidates = [];
@@ -212,7 +209,6 @@ var Planner = (function () {
     var mins = main.mins + (addon ? Math.round(addon.mins / 2) : 0);
 
     var tags = [];
-    if (settings.kidsSlot === day + '-' + meal) { tags.push('kids'); }
     if (hasTag(main, 'light')) { tags.push('light'); }
     if (mins <= 20) { tags.push('quick'); }
 

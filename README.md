@@ -58,7 +58,7 @@ There is a skip button.
   protein.
 - **Share** — the week as a real timetable image for the fridge or the family group, plus print and
   copy-as-text. Drawn on a canvas, so it works offline with nothing installed.
-- **Settings** — the protein timetable, plus five switches.
+- **Settings** — the protein timetable, plus three switches.
 
 Everything is kept in `localStorage`. Nothing leaves the device.
 
@@ -70,8 +70,9 @@ Everything is kept in `localStorage`. Nothing leaves the device.
 | Health conscious | Leans towards millets, low-oil and steamed dishes. Nothing is banned. |
 | Light dinners | Soft, low-oil food at night. Nothing heavy or deep-fried after dark. |
 | Quick weekday breakfasts | Nothing over 20 minutes Monday to Friday. |
-| Sunday special | Biryani or a full meal for Sunday lunch. |
-| Kids' pick | One meal a week from the children's end of the list. |
+
+Sunday lunch is always biryani or a full meal. That used to be a switch, but nobody was ever going
+to ask for a worse Sunday.
 
 ## The generator
 

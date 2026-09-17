@@ -372,7 +372,6 @@ body {
 }
 
 .chip-protein { background: var(--chilli-bg); color: var(--chilli); text-transform: none; letter-spacing: .01em; font-size: 11px; }
-.chip-kids    { background: var(--saffron-bg); color: var(--saffron); }
 .chip-health  { background: var(--sage-bg); color: var(--sage); }
 
 /* ---------- week ---------- */
