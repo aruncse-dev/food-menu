@@ -3,154 +3,247 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>What's Cooking Today</title>
-<meta name="description" content="A daily and weekly meal timetable for a Tamil Nadu household.">
-<meta name="theme-color" content="#2f6b3f">
+<title>What's Cooking</title>
+<meta name="description" content="A daily and weekly meal timetable for the whole house.">
+<meta name="theme-color" content="#fbf7f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍛</text></svg>">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<header class="site-header">
-  <span class="brand-mark" aria-hidden="true">🍛</span>
-  <div>
-    <h1>இன்று என்ன சமையல்?</h1>
-    <p>What's cooking today</p>
-  </div>
-</header>
+<!-- Icon sprite. Inline SVG rather than emoji: emoji render differently on
+     every platform and look like placeholders. These inherit colour. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-today" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="16" rx="2.5"/>
+      <path d="M8 3v4M16 3v4M3 10h18"/><circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-week" viewBox="0 0 24 24">
+      <path d="M9 6h12M9 12h12M9 18h12"/>
+      <circle cx="4" cy="6" r="1.3" fill="currentColor" stroke="none"/>
+      <circle cx="4" cy="12" r="1.3" fill="currentColor" stroke="none"/>
+      <circle cx="4" cy="18" r="1.3" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-export" viewBox="0 0 24 24">
+      <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/>
+      <path d="M14 3v5h5M9 13h6M9 17h4"/>
+    </symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24">
+      <path d="M4 7h7M15 7h5M4 12h3M11 12h9M4 17h9M17 17h3"/>
+      <circle cx="13" cy="7" r="2.1"/><circle cx="9" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/>
+    </symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24">
+      <path d="M16 3h5v5M21 3l-8 8M16 21h5v-5M21 21l-6-6M3 21l7-7M3 3l5 5"/>
+    </symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24">
+      <path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/>
+      <path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24">
+      <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 118 0v3"/>
+    </symbol>
+    <symbol id="i-unlock" viewBox="0 0 24 24">
+      <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 017.7-1.5"/>
+    </symbol>
+    <symbol id="i-share" viewBox="0 0 24 24">
+      <path d="M12 16V3M8 7l4-4 4 4M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/>
+    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24">
+      <path d="M12 3v13M8 12l4 4 4-4M5 21h14"/>
+    </symbol>
+    <symbol id="i-print" viewBox="0 0 24 24">
+      <path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/>
+      <path d="M7 14h10v7H7z"/>
+    </symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24">
+      <rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5.5A2.5 2.5 0 017.5 3H15"/>
+    </symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24">
+      <path d="M20.5 12a8.5 8.5 0 11-2.8-6.3M20 4v5h-5"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>
+    </symbol>
+  </defs>
+</svg>
 
 <main>
 
-  <!-- ================= PLAN ================= -->
-  <section class="screen" id="screen-plan">
+  <!-- ===================== TODAY ===================== -->
+  <section class="screen" id="screen-today">
 
-    <div class="toolbar">
-      <div class="segmented" role="tablist" aria-label="Plan range">
-        <button id="range-day" role="tab" aria-selected="true">Today</button>
-        <button id="range-week" role="tab" aria-selected="false">Week</button>
+    <header class="page-head">
+      <div class="head-row">
+        <div>
+          <p class="eyebrow" id="today-eyebrow">Good morning</p>
+          <h1 class="page-title" id="today-title">Today</h1>
+          <p class="page-sub" id="today-date"></p>
+        </div>
+        <button class="btn btn-icon" id="btn-new-day" title="New ideas for this day" aria-label="New ideas for this day">
+          <svg class="icon"><use href="#i-shuffle"/></svg>
+        </button>
       </div>
-      <span class="spacer"></span>
-      <button class="btn btn-round" id="btn-regenerate" title="New plan" aria-label="New plan">🎲</button>
+    </header>
+
+    <div class="day-strip" id="day-strip" role="group" aria-label="Pick a day"></div>
+
+    <div id="today-body"></div>
+
+  </section>
+
+  <!-- ===================== WEEK ===================== -->
+  <section class="screen" id="screen-week" hidden>
+
+    <header class="page-head">
+      <div class="head-row">
+        <div>
+          <p class="eyebrow">21 meals planned</p>
+          <h1 class="page-title">This week</h1>
+          <p class="page-sub" id="week-range"></p>
+        </div>
+        <button class="btn btn-icon" id="btn-new-week" title="New plan" aria-label="New plan">
+          <svg class="icon"><use href="#i-shuffle"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="rule"><span>Tap the padlock to keep a meal</span></div>
+    <div id="week-body"></div>
+
+  </section>
+
+  <!-- ===================== EXPORT ===================== -->
+  <section class="screen" id="screen-export" hidden>
+
+    <header class="page-head">
+      <p class="eyebrow">Ready to send</p>
+      <h1 class="page-title">Share the menu</h1>
+      <p class="page-sub">For the fridge door, or the family group.</p>
+    </header>
+
+    <div class="preview">
+      <canvas id="export-canvas" role="img" aria-label="Weekly menu timetable"></canvas>
     </div>
 
-    <div id="view-day">
-      <p class="date-line" id="day-date"></p>
-      <div class="meal-list" id="day-meals"></div>
-      <button class="btn btn-primary surprise" id="btn-surprise">
-        ✨ What do I cook right now?
+    <div class="actions">
+      <button class="btn btn-primary btn-block" id="btn-share">
+        <svg class="icon"><use href="#i-share"/></svg> Share
+      </button>
+      <div class="pair">
+        <button class="btn" id="btn-download">
+          <svg class="icon"><use href="#i-download"/></svg> Save
+        </button>
+        <button class="btn" id="btn-print">
+          <svg class="icon"><use href="#i-print"/></svg> Print
+        </button>
+      </div>
+      <button class="btn btn-block" id="btn-copy">
+        <svg class="icon"><use href="#i-copy"/></svg> Copy as text
       </button>
     </div>
 
-    <div id="view-week" hidden>
-      <p class="date-line">Tap 🔓 to lock a meal, then hit 🎲 — locked meals stay put.</p>
-      <div class="week" id="week-list"></div>
-    </div>
-
   </section>
 
-  <!-- ================= EXPORT ================= -->
-  <section class="screen" id="screen-export" hidden>
-    <p class="date-line" style="margin-top:14px">
-      A printable timetable for the fridge, or to send to the family group.
-    </p>
-    <div class="export-preview">
-      <canvas id="export-canvas" role="img" aria-label="Weekly menu timetable"></canvas>
-    </div>
-    <div class="export-actions">
-      <button class="btn btn-primary btn-block" id="btn-share">📤 Share</button>
-      <div class="row">
-        <button class="btn" id="btn-download">⬇️ Save image</button>
-        <button class="btn" id="btn-print">🖨️ Print</button>
-      </div>
-      <button class="btn btn-block" id="btn-copy">📋 Copy as text</button>
-    </div>
-  </section>
-
-  <!-- ================= SETTINGS ================= -->
+  <!-- ===================== SETTINGS ===================== -->
   <section class="screen" id="screen-settings" hidden>
 
-    <p class="section-title">The house</p>
-    <div class="panel">
+    <header class="page-head">
+      <p class="eyebrow">How your house eats</p>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-sub">Change anything and the plan rebuilds straight away.</p>
+    </header>
 
-      <div class="setting">
-        <div class="setting-text">
+    <div class="rule"><span>The house</span></div>
+
+    <div class="card">
+
+      <div class="field">
+        <div class="field-text">
           <h3>Non-veg days</h3>
-          <p>Non-veg shows up only on the days you pick — lunch at the weekend, dinner on a working day. Every other meal stays veg.</p>
-          <div class="day-picker" id="nonveg-days"></div>
+          <p>Non-veg appears only on the days you pick — lunch at the weekend, dinner on a working day. Everything else stays vegetarian.</p>
+          <div class="picker" id="nonveg-days"></div>
         </div>
       </div>
 
-      <div class="setting">
-        <div class="setting-text">
+      <div class="field">
+        <div class="field-text">
           <h3>Kids' pick</h3>
-          <p>One meal a week goes to what the children actually want — pasta, noodles, fried rice.</p>
+          <p>One meal a week is the children's choice.</p>
         </div>
-        <div class="setting-control">
-          <select class="field" id="kids-slot">
+        <div class="field-ctl">
+          <select class="select" id="kids-slot">
             <option value="Sat-dinner">Sat dinner</option>
             <option value="Sun-dinner">Sun dinner</option>
             <option value="Fri-dinner">Fri dinner</option>
-            <option value="none">Skip it</option>
+            <option value="none">Skip</option>
           </select>
         </div>
       </div>
 
-      <div class="setting">
-        <div class="setting-text">
+      <div class="field">
+        <div class="field-text">
           <h3>Easy on the elders at night</h3>
-          <p>Dinners stay soft, light and low-oil. No parotta or poori at night.</p>
+          <p>Dinners stay soft, light and low-oil. Nothing heavy or deep-fried after dark.</p>
         </div>
-        <div class="setting-control">
+        <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-elder" checked>
-            <span class="slider"></span>
+            <span class="track"></span>
+            <span class="sr-only">Easy on the elders at night</span>
           </label>
         </div>
       </div>
 
-      <div class="setting">
-        <div class="setting-text">
+      <div class="field">
+        <div class="field-text">
           <h3>Quick weekday breakfasts</h3>
-          <p>Nothing over 20 minutes Monday to Friday. Poori and pongal wait for the weekend.</p>
+          <p>Nothing over 20 minutes Monday to Friday. The elaborate ones wait for the weekend.</p>
         </div>
-        <div class="setting-control">
+        <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-quick" checked>
-            <span class="slider"></span>
+            <span class="track"></span>
+            <span class="sr-only">Quick weekday breakfasts</span>
           </label>
         </div>
       </div>
 
-      <div class="setting">
-        <div class="setting-text">
+      <div class="field">
+        <div class="field-text">
           <h3>Sunday special</h3>
-          <p>Biryani or a full banana-leaf meals for Sunday lunch.</p>
+          <p>Biryani or a full banana-leaf meal for Sunday lunch.</p>
         </div>
-        <div class="setting-control">
+        <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-sunday" checked>
-            <span class="slider"></span>
+            <span class="track"></span>
+            <span class="sr-only">Sunday special</span>
           </label>
         </div>
       </div>
 
     </div>
 
-    <p class="section-title">Data</p>
-    <div class="panel">
-      <div class="setting">
-        <div class="setting-text">
+    <div class="rule"><span>Data</span></div>
+
+    <div class="card">
+      <div class="field">
+        <div class="field-text">
           <h3>Start over</h3>
-          <p>Clears the saved plan and settings from this browser.</p>
+          <p>Clears the saved plan and settings from this browser and builds a fresh week.</p>
         </div>
-        <div class="setting-control">
-          <button class="btn" id="btn-reset">Reset</button>
+        <div class="field-ctl">
+          <button class="btn" id="btn-reset">
+            <svg class="icon icon-sm"><use href="#i-reset"/></svg> Reset
+          </button>
         </div>
       </div>
     </div>
 
-    <p class="note">
-      Everything is stored in this browser only. No account, no server, nothing leaves the device.
+    <p class="footnote">
+      Everything lives in this browser. No account, no server, nothing leaves your device.
     </p>
 
   </section>
@@ -158,9 +251,18 @@
 </main>
 
 <nav class="nav" role="tablist" aria-label="Sections">
-  <button id="tab-plan" role="tab" aria-selected="true"><span class="ico" aria-hidden="true">🍽️</span>Plan</button>
-  <button id="tab-export" role="tab" aria-selected="false"><span class="ico" aria-hidden="true">📄</span>Export</button>
-  <button id="tab-settings" role="tab" aria-selected="false"><span class="ico" aria-hidden="true">⚙️</span>Settings</button>
+  <button id="tab-today" role="tab" aria-selected="true">
+    <svg class="icon icon-lg"><use href="#i-today"/></svg>Today
+  </button>
+  <button id="tab-week" role="tab" aria-selected="false">
+    <svg class="icon icon-lg"><use href="#i-week"/></svg>Week
+  </button>
+  <button id="tab-export" role="tab" aria-selected="false">
+    <svg class="icon icon-lg"><use href="#i-export"/></svg>Share
+  </button>
+  <button id="tab-settings" role="tab" aria-selected="false">
+    <svg class="icon icon-lg"><use href="#i-settings"/></svg>Settings
+  </button>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

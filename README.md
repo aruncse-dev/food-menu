@@ -1,4 +1,4 @@
-# இன்று என்ன சமையல்? — What's Cooking Today
+# What's Cooking
 
 A breakfast / lunch / dinner timetable for a Tamil Nadu household.
 
@@ -20,12 +20,13 @@ is the same column, centred.
 
 ## What it does
 
-- **Today** — breakfast, lunch and dinner with their sides and rough cooking time. The meal you are
-  about to cook is marked *up next*. 🎲 on any card rerolls just that meal.
-- **Week** — all 21 meals. Lock any meal with 🔓 and it survives the next reroll.
-- **Export** — the week as a picture for the fridge or the family WhatsApp group, plus print and
-  copy-as-text. Drawn on a canvas, so it works offline with nothing installed.
-- **Settings** — four household switches.
+- **Today** — the meal you are about to cook, large, as the answer to "what do I make now". The
+  other two sit under it as compact rows. A day strip lets you look ahead without leaving the screen.
+- **Week** — all 21 meals, grouped by day, today ringed in green. Keep any meal and it survives the
+  next reroll.
+- **Share** — the week as a picture for the fridge or the family group, plus print and copy-as-text.
+  Drawn on a canvas, so it works offline with nothing installed.
+- **Settings** — five household switches.
 
 Deliberately *not* per-person preference profiles. Making every family member fill in a form before
 the app serves a single meal is how these things get abandoned in week one. Four household switches
@@ -71,11 +72,17 @@ changes:
 `sides` is a list of *groups*; one item is picked from each, which is where the day-to-day variety
 comes from.
 
+## Language
+
+The interface is English only for now. Dish records still carry their `tamil` name — unused by the
+UI, but it is the seed for a language switch rather than something to retype later. Adding Tamil
+means rendering that field and moving the interface strings in `js/app.js` into a lookup.
+
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `index.html` | Three screens |
+| `index.html` | Four screens and the icon sprite |
 | `css/styles.css` | All styling, light and dark |
 | `js/data.js` | **The dish database** — the part worth editing |
 | `js/planner.js` | The generator |

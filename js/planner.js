@@ -128,7 +128,7 @@ var Planner = (function () {
   /* Fills one slot. Filters are relaxed in order rather than ever
      returning nothing: a household would rather see poori on a Tuesday
      than an empty box. */
-  function fillSlot(meal, day, dayIndex, settings, lastSeen) {
+  function fillSlot(meal, day, dayIndex, settings, lastSeen, excludeId) {
     var base = {
       nonVegSlot: isNonVegSlot(day, meal, settings),
       kidsSlot: settings.kidsSlot === day + '-' + meal,
@@ -150,6 +150,14 @@ var Planner = (function () {
       if (candidates.length) { break; }
     }
     if (!candidates.length) { return null; }
+
+    /* Never hand back the dish already in the slot while an alternative
+       exists: tapping "Change" and seeing nothing change reads as a
+       broken button, not as a coincidence. */
+    if (excludeId) {
+      var others = candidates.filter(function (d) { return d.id !== excludeId; });
+      if (others.length) { candidates = others; }
+    }
 
     var scored = candidates.map(function (d) {
       return { dish: d, score: score(d, meal, day, dayIndex, settings, lastSeen) };
@@ -230,13 +238,7 @@ var Planner = (function () {
 
     var day = DAY_NAMES[dayIndex];
     var current = week[dayIndex][meal];
-    var dish = fillSlot(meal, day, dayIndex, settings, lastSeen);
-
-    /* Try once more if we landed on what is already there. */
-    if (dish && current && dish.id === current.id) {
-      var again = fillSlot(meal, day, dayIndex, settings, lastSeen);
-      if (again) { dish = again; }
-    }
+    var dish = fillSlot(meal, day, dayIndex, settings, lastSeen, current && current.id);
 
     if (!dish) { return current; }
     return toSlot(dish, settings.kidsSlot === day + '-' + meal);
