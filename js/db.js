@@ -17,10 +17,10 @@
    storage API for an origin in one bucket and evicts the bucket whole,
    so localStorage was never the weak link. The durability comes from
    navigator.storage.persist(), which asks Chrome to exempt this origin
-   from eviction, and from Backup, which is the only copy that outlives
-   the browser at all. SQLite earns its place for what it makes
-   possible either side of that: a single file you can hand to another
-   phone, and room for real queries later.
+   from eviction. SQLite earns its place for the shape of the data
+   rather than its safety: several households, each with their own
+   food list and week, are rows and a join instead of nested objects,
+   and there is room for real queries later.
 
    The database is a genuine SQLite file kept in IndexedDB, reloaded
    into the engine at startup and written back after each change. The
@@ -35,7 +35,8 @@
    Chrome throws away everything an incognito session stored the
    moment its last window closes. Inside the session the database is
    real — reload, navigate, open another tab, it is all still there —
-   and that is as far as any web app can go. Backup is the way out.
+   and that is as far as any web app can go. Settings says so plainly
+   rather than implying a promise it cannot keep.
    ================================================================== */
 
 var Store = (function () {
@@ -770,115 +771,12 @@ var Store = (function () {
     return true;
   }
 
-  /* ---------------- backup ---------------- */
-
-  function backup() {
-    return flush().then(function () {
-      if (engine === 'sql') {
-        var bytes = exportBytes();
-        if (bytes) {
-          return { name: 'food-menu.sqlite3', type: 'application/vnd.sqlite3', bytes: bytes };
-        }
-      }
-      var text = JSON.stringify(snapshot || {}, null, 2);
-      return {
-        name: 'food-menu.json',
-        type: 'application/json',
-        bytes: new TextEncoder().encode(text)
-      };
-    });
-  }
-
-  /* Restore only accepts a file this app wrote. A SQLite database from
-     somewhere else would import cleanly and then read as an empty
-     house, which looks exactly like losing everything — so the tables
-     are checked before anything is replaced. */
-  function isOurDatabase() {
-    if (!tableExists('meta') || !tableExists('house') || !tableExists('plan')) { return false; }
-    try {
-      return !!db.selectValue('SELECT value FROM meta WHERE key = ?', ['schema']);
-    } catch (e) { return false; }
-  }
-
-  function isOurJson(parsed) {
-    if (!parsed || typeof parsed !== 'object') { return false; }
-    if (Array.isArray(parsed.houses) && parsed.byHouse) { return true; }
-    /* a schema-1 export, before households */
-    return !!(parsed.library || parsed.settings || parsed.week);
-  }
-
-  function restore(buffer) {
-    var bytes = new Uint8Array(buffer);
-
-    if (looksLikeDatabase(bytes)) {
-      if (engine !== 'sql') { return Promise.resolve(null); }
-
-      var previous = db;
-      var candidate = null;
-      try {
-        candidate = new sqlite3.oo1.DB(':memory:', 'c');
-        db = candidate;
-        importBytes(bytes);
-        if (!isOurDatabase()) { throw new Error('not ours'); }
-        migrate();
-        snapshot = readAll();
-        if (!snapshot.houses.length) { throw new Error('no households'); }
-        previous.close();
-      } catch (e) {
-        /* Put the old database back rather than leaving the app on a
-           file it could not read. */
-        db = previous;
-        if (candidate && candidate !== previous) {
-          try { candidate.close(); } catch (e2) { /* already gone */ }
-        }
-        return Promise.resolve(null);
-      }
-      return write(snapshot).then(function () { return snapshot; });
-    }
-
-    /* A .json backup, or a database restored onto a browser that could
-       not load SQLite at all. */
-    try {
-      var parsed = JSON.parse(new TextDecoder().decode(bytes));
-      if (!isOurJson(parsed)) { return Promise.resolve(null); }
-
-      if (Array.isArray(parsed.houses)) {
-        snapshot = {
-          houses: parsed.houses.map(function (h) {
-            return { id: h.id, name: h.name || '' };
-          }),
-          active: parsed.active,
-          byHouse: parsed.byHouse || {}
-        };
-        if (!snapshot.byHouse[snapshot.active]) {
-          snapshot.active = snapshot.houses.length ? snapshot.houses[0].id : null;
-        }
-      } else {
-        snapshot = oneHouse({
-          settings: parsed.settings || {},
-          library: Object.assign(emptyLibrary(), parsed.library || {}),
-          week: parsed.week || null,
-          locked: parsed.locked || {}
-        });
-      }
-      if (!snapshot.houses.length) { return Promise.resolve(null); }
-    } catch (e) {
-      return Promise.resolve(null);
-    }
-    return write(snapshot).then(function () { return snapshot; });
-  }
-
   /* ---------------- what to tell the user ---------------- */
 
-  /* A key rather than a sentence: what this says has to be sayable in
-     whatever language the house chose, and js/i18n.js owns that. */
   function status() {
-    var key = 'storage.tab';
-    if (sink !== 'none') { key = engine === 'sql' ? 'storage.sqlite' : 'storage.local'; }
     return {
       engine: engine,
       sink: sink,
-      labelKey: key,
       persistent: persistent,
       durable: sink !== 'none'
     };
@@ -905,8 +803,6 @@ var Store = (function () {
     setPref: setPref,
     flush: flush,
     reset: reset,
-    backup: backup,
-    restore: restore,
     status: status
   };
 })();

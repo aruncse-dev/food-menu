@@ -59,7 +59,6 @@
     <symbol id="i-copy" viewBox="0 0 24 24">
       <rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5.5A2.5 2.5 0 017.5 3H15"/>
     </symbol>
-    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4M5 21h14"/></symbol>
     <symbol id="i-reset" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 11-2.8-6.3M20 4v5h-5"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
@@ -300,26 +299,6 @@
     <div class="rule"><span data-i18n="settings.data">Data</span></div>
 
     <div class="card">
-      <div class="field field-stack">
-        <div class="field-text">
-          <h3><span data-i18n="settings.where">Where this is kept</span> <span class="pill" id="storage-badge">Saved</span></h3>
-          <p id="storage-where" data-i18n="settings.checking">Checking…</p>
-          <p class="hint" id="storage-note"></p>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-text">
-          <h3 data-i18n="settings.backup">Backup</h3>
-          <p data-i18n="settings.backupHint">Saves the whole database as one file. The only copy that outlives this browser.</p>
-        </div>
-        <div class="field-ctl field-ctl-pair">
-          <button class="btn" id="btn-backup"><svg class="icon icon-sm"><use href="#i-download"/></svg> <span data-i18n="settings.save">Save</span></button>
-          <button class="btn" id="btn-restore"><svg class="icon icon-sm"><use href="#i-upload"/></svg> <span data-i18n="settings.restore">Restore</span></button>
-          <input type="file" id="restore-file" accept=".sqlite3,.json" hidden>
-        </div>
-      </div>
-
       <div class="field">
         <div class="field-text">
           <h3 data-i18n="settings.startOver">Start over</h3>
@@ -331,9 +310,7 @@
       </div>
     </div>
 
-    <p class="footnote" data-i18n="settings.footnote">
-      Everything lives in this browser. No account, no server, nothing leaves your device.
-    </p>
+    <p class="footnote" id="storage-note"></p>
   </section>
 
 </main>

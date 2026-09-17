@@ -156,6 +156,7 @@ var I18N = (function () {
     'foods.nothingTicked': 'Nothing ticked',
     'foods.nothingTickedFor': 'Nothing ticked for {meal} — the plan will leave it empty.',
     'foods.noneTicked': 'none ticked',
+    'foods.yours': 'yours',
     'foods.delete': 'Delete {name}',
 
     /* ---- settings ---- */
@@ -179,6 +180,7 @@ var I18N = (function () {
     'settings.language': 'Language',
     'settings.languageHint': 'Dish names and the whole interface.',
     'settings.protein': 'Protein timetable',
+    'settings.proteinSheet': 'The vegetarian food is cooked either way. This only adds a dish beside it.',
     'settings.proteinHint': 'Tap any meal to say what protein goes <strong>beside</strong> it. ' +
                             'The vegetarian food is always cooked — this only adds a dish for ' +
                             'whoever eats it.',
@@ -195,34 +197,14 @@ var I18N = (function () {
     'settings.quick': 'Quick weekday breakfasts',
     'settings.quickHint': 'Nothing over 20 minutes Monday to Friday.',
     'settings.data': 'Data',
-    'settings.where': 'Where this is kept',
-    'settings.checking': 'Checking…',
-    'settings.backup': 'Backup',
-    'settings.backupHint': 'Saves the whole database as one file. ' +
-                           'The only copy that outlives this browser.',
-    'settings.save': 'Save',
-    'settings.restore': 'Restore',
     'settings.startOver': 'Start over',
     'settings.startOverHint': 'Erases the plan, your food list and your own dishes ' +
                               'from this browser.',
     'settings.reset': 'Reset',
     'settings.footnote': 'Everything lives in this browser. No account, no server, ' +
                          'nothing leaves your device.',
+    'settings.footnoteWarn': 'A private window clears it when you close the last one.',
 
-    /* ---- storage wording ---- */
-    'storage.sqlite': 'SQLite database in this browser',
-    'storage.local': 'This browser’s local storage',
-    'storage.tab': 'This tab only',
-    'storage.permanent': 'Permanent',
-    'storage.saved': 'Saved',
-    'storage.notePermanent': 'Marked permanent, so Chrome will not clear it to free up space. ' +
-                             'It survives closing the browser and restarting the phone.',
-    'storage.noteSaved': 'Saved, but not marked permanent — Chrome may clear it if the device ' +
-                         'runs very low on space. A private window always clears it when the ' +
-                         'last one closes.',
-    'storage.noteNone': 'Nothing is being saved. This browser will not let the app store ' +
-                        'anything, so the plan lasts until you close the tab. Back it up if ' +
-                        'you want to keep it.',
 
     /* ---- sheets and actions ---- */
     'action.change': 'Change',
@@ -244,11 +226,6 @@ var I18N = (function () {
     'toast.protein': 'Protein timetable updated',
     'toast.copied': 'Menu copied',
     'toast.imageSaved': 'Image saved',
-    'toast.backupSaved': 'Backup saved',
-    'toast.backupRestored': 'Backup restored',
-    'toast.notBackup': 'That is not a backup from this app',
-    'toast.unreadable': 'Could not read that file',
-    'toast.backupFailed': 'Could not make a backup',
     'toast.copyFailed': 'Could not copy automatically',
     'toast.imageFailed': 'Could not save the image',
     'toast.shareFailed': 'Could not open the share sheet',
@@ -389,6 +366,7 @@ var I18N = (function () {
     'foods.nothingTickedFor': '{meal}-க்கு எதுவும் தேர்ந்தெடுக்கப்படவில்லை — ' +
                               'அந்த வேளை காலியாக இருக்கும்.',
     'foods.noneTicked': 'எதுவும் இல்லை',
+    'foods.yours': 'நீங்கள் சேர்த்தது',
     'foods.delete': '{name} நீக்கு',
 
     'settings.eyebrow': 'உங்கள் வீட்டு உணவு முறை',
@@ -411,6 +389,7 @@ var I18N = (function () {
     'settings.language': 'மொழி',
     'settings.languageHint': 'உணவுப் பெயர்களும் முழு இடைமுகமும்.',
     'settings.protein': 'புரத அட்டவணை',
+    'settings.proteinSheet': 'சைவ உணவு எப்படியும் சமைக்கப்படும். இது அதனுடன் ஒரு உணவை மட்டுமே சேர்க்கிறது.',
     'settings.proteinHint': 'எந்த புரதம் <strong>உடன்</strong> வர வேண்டும் என்பதைச் சொல்ல ' +
                             'ஒரு வேளையைத் தொடுங்கள். சைவ உணவு எப்படியும் சமைக்கப்படும் — ' +
                             'இது சாப்பிடுபவர்களுக்கு ஒரு உணவை மட்டுமே சேர்க்கிறது.',
@@ -428,35 +407,14 @@ var I18N = (function () {
     'settings.quick': 'வேலை நாட்களில் விரைவான காலை உணவு',
     'settings.quickHint': 'திங்கள் முதல் வெள்ளி வரை 20 நிமிடத்திற்கு மேல் இல்லை.',
     'settings.data': 'தரவு',
-    'settings.where': 'இது எங்கே சேமிக்கப்படுகிறது',
-    'settings.checking': 'சரிபார்க்கிறது…',
-    'settings.backup': 'காப்புப்பிரதி',
-    'settings.backupHint': 'முழு தரவுத்தளத்தையும் ஒரே கோப்பாகச் சேமிக்கும். ' +
-                           'இந்த உலாவியைத் தாண்டி நிலைக்கும் ஒரே நகல் இதுதான்.',
-    'settings.save': 'சேமி',
-    'settings.restore': 'மீட்டெடு',
     'settings.startOver': 'மீண்டும் தொடங்கு',
     'settings.startOverHint': 'திட்டம், உணவுப் பட்டியல், நீங்கள் சேர்த்த உணவுகள் ' +
                               'அனைத்தையும் இந்த உலாவியிலிருந்து அழிக்கும்.',
     'settings.reset': 'மீட்டமை',
     'settings.footnote': 'எல்லாம் இந்த உலாவியில் மட்டுமே. கணக்கு இல்லை, சர்வர் இல்லை, ' +
                          'உங்கள் சாதனத்தை விட்டு எதுவும் வெளியே செல்லாது.',
+    'settings.footnoteWarn': 'தனிப்பட்ட சாளரத்தில் (private window) கடைசி சாளரம் மூடும்போது இது அழிந்துவிடும்.',
 
-    'storage.sqlite': 'இந்த உலாவியில் SQLite தரவுத்தளம்',
-    'storage.local': 'இந்த உலாவியின் லோக்கல் ஸ்டோரேஜ்',
-    'storage.tab': 'இந்த தாவல் மட்டும்',
-    'storage.permanent': 'நிரந்தரம்',
-    'storage.saved': 'சேமிக்கப்பட்டது',
-    'storage.notePermanent': 'நிரந்தரமாகக் குறிக்கப்பட்டுள்ளது, எனவே இடம் காலி செய்ய Chrome ' +
-                             'இதை அழிக்காது. உலாவியை மூடினாலும், போனை மறுதொடக்கம் ' +
-                             'செய்தாலும் இது இருக்கும்.',
-    'storage.noteSaved': 'சேமிக்கப்பட்டது, ஆனால் நிரந்தரமாகக் குறிக்கப்படவில்லை — சாதனத்தில் ' +
-                         'இடம் மிகக் குறைவாக இருந்தால் Chrome இதை அழிக்கலாம். ' +
-                         'தனிப்பட்ட சாளரம் (private window) கடைசி சாளரம் மூடும்போது ' +
-                         'எப்போதும் இதை அழித்துவிடும்.',
-    'storage.noteNone': 'எதுவும் சேமிக்கப்படவில்லை. இந்த உலாவி எதையும் சேமிக்க அனுமதிக்கவில்லை, ' +
-                        'எனவே தாவலை மூடும் வரை மட்டுமே திட்டம் இருக்கும். ' +
-                        'வைத்திருக்க விரும்பினால் காப்புப்பிரதி எடுங்கள்.',
 
     'action.change': 'மாற்று',
     'action.keepShort': 'வைத்திரு',
@@ -476,11 +434,6 @@ var I18N = (function () {
     'toast.protein': 'புரத அட்டவணை புதுப்பிக்கப்பட்டது',
     'toast.copied': 'மெனு நகலெடுக்கப்பட்டது',
     'toast.imageSaved': 'படம் சேமிக்கப்பட்டது',
-    'toast.backupSaved': 'காப்புப்பிரதி சேமிக்கப்பட்டது',
-    'toast.backupRestored': 'காப்புப்பிரதி மீட்டெடுக்கப்பட்டது',
-    'toast.notBackup': 'இது இந்த ஆப்பின் காப்புப்பிரதி இல்லை',
-    'toast.unreadable': 'அந்தக் கோப்பைப் படிக்க முடியவில்லை',
-    'toast.backupFailed': 'காப்புப்பிரதி எடுக்க முடியவில்லை',
     'toast.copyFailed': 'தானாக நகலெடுக்க முடியவில்லை',
     'toast.imageFailed': 'படத்தைச் சேமிக்க முடியவில்லை',
     'toast.shareFailed': 'பகிர்வுத் திரையைத் திறக்க முடியவில்லை',

@@ -63,7 +63,7 @@ own dishes are all left alone — and cancelling changes nothing.
 - **Foods** — your food list. Tick what your house eats; anything unticked is never planned. Add
   your own dishes, sides and protein dishes. Separate lists for breakfast, lunch, dinner, sides and
   protein.
-- **Settings** — households, language, the protein timetable, plus three switches.
+- **Settings** — households, language, the protein timetable, three switches and a reset. Nothing else.
 
 Sharing is not a screen. The share button sits in the header of Today and Week, next to the one that
 rerolls them, and opens a sheet over whatever you were looking at. From Today it exports that one
@@ -85,21 +85,15 @@ Being straight about what that does and does not buy:
 - **`navigator.storage.persist()` is.** The app asks for it on every start. Granted, Chrome will not
   clear the data to reclaim space. Chrome decides based on how much you use the site, and installing
   it to the home screen makes it a yes.
-- **Backup is the only copy that outlives the browser.** Settings → Backup writes the whole database
-  — every household in it — to one file. Restore reads it back. Clearing site data, switching phone,
-  a lost device: that file is the answer to all three. Restore only accepts a file this app wrote;
-  another SQLite database would import cleanly and then read as an empty house, which looks exactly
-  like losing everything, so the tables are checked before anything is replaced.
 - **Private windows are wiped, by design.** Chrome throws away everything an incognito session
   stored the moment its last window closes, and no web app can change that. Inside the session the
-  database is real — reload, open another tab, it is all still there. Settings says which of these
-  you are in rather than guessing.
+  database is real — reload, open another tab, it is all still there. Settings says so in one line
+  rather than implying a promise it cannot keep.
+- **There is no export.** Nothing leaves the device, which also means nothing survives it: clear
+  this site's data and the plan is gone. That is the deliberate trade for a settings screen with
+  nothing on it to administer. What gets shared is the timetable image, not the database.
 
-The exported file is an ordinary SQLite database, so it opens in any SQLite tool:
-
-```sql
-SELECT name, meal, json_extract(body, '$.main') AS main FROM plan ORDER BY day;
-```
+The shape of it:
 
 | Table | What is in it |
 |---|---|
@@ -120,8 +114,7 @@ the whole database into a worker to avoid re-serialising something this small wo
 and nothing else. If the data grows past a few hundred kilobytes, that is the change to make.
 
 Where SQLite cannot load at all — off `file://`, mainly, where a dynamic `import()` is blocked — the
-app falls back to IndexedDB and then `localStorage`, and Backup writes JSON instead. Settings always
-names which one is live.
+app falls back to IndexedDB and then `localStorage`, and the plan still persists.
 
 ## Settings
 
@@ -190,7 +183,7 @@ about; the list only becomes a thing to manage once there are two.
 |---|---|
 | `index.html` | Four screens, the first-run setup, the sheet and the icon sprite |
 | `css/styles.css` | All styling, dark and light |
-| `js/db.js` | The database, households, every fallback under it, backup and restore |
+| `js/db.js` | The database, households and every fallback under it |
 | `js/i18n.js` | Every interface string, in each language |
 | `js/data.js` | **The suggested food list** — mains, sides, protein dishes |
 | `js/library.js` | What this household actually eats: what is switched off, what they added |

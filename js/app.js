@@ -324,7 +324,7 @@
       var block = el('section', 'day-block' + (today ? ' is-today' : '') + (weekend ? ' is-weekend' : ''));
       var head = el('div', 'day-block-head');
       head.appendChild(el('span', 'name', I18N.dayName(row.day)));
-      head.appendChild(el('span', 'when', today ? 'Today' : fmt(dateFor(dayIndex), { day: 'numeric', month: 'short' })));
+      head.appendChild(el('span', 'when', today ? I18N.t('today.title') : fmt(dateFor(dayIndex), { day: 'numeric', month: 'short' })));
       block.appendChild(head);
       block.appendChild(stackOf(MEAL_ORDER, dayIndex));
       body.appendChild(block);
@@ -333,19 +333,26 @@
 
   /* ---------------- foods ---------------- */
 
-  function matches(name) {
-    return !foodsQuery || name.toLowerCase().indexOf(foodsQuery) !== -1;
+  /* Matches either name, whichever language is showing. Someone who
+     knows a dish as "sambar" should find சாம்பார், and the other way
+     round — the keyboard being typed on is not always the language the
+     app is set to. */
+  function matches(item) {
+    if (!foodsQuery) { return true; }
+    return [item.name, item.tamil].some(function (n) {
+      return n && n.toLowerCase().indexOf(foodsQuery) !== -1;
+    });
   }
 
   function visibleItems() {
     if (foodsTab === 'sides') {
-      return Library.allSides().filter(function (s) { return matches(s.name); });
+      return Library.allSides().filter(matches);
     }
     if (foodsTab === 'protein') {
-      return Library.allAddons().filter(function (a) { return matches(a.name); });
+      return Library.allAddons().filter(matches);
     }
     return Library.allMains().filter(function (d) {
-      return d.meals.indexOf(foodsTab) !== -1 && matches(d.name);
+      return d.meals.indexOf(foodsTab) !== -1 && matches(d);
     });
   }
 
@@ -358,7 +365,7 @@
     var items = visibleItems();
     var on = items.filter(function (i) { return Library.isOn(kind, i.id); }).length;
 
-    $('foods-count').textContent = on + ' of ' + items.length + ' ticked';
+    $('foods-count').textContent = I18N.t('foods.count', { on: on, total: items.length });
 
     Array.prototype.forEach.call($('foods-seg').children, function (b) {
       b.setAttribute('aria-selected', String(b.getAttribute('data-tab') === foodsTab));
@@ -400,10 +407,10 @@
       var onCount = members.filter(function (i) { return Library.isOn(kind, i.id); }).length;
 
       var head = el('div', 'cat-head');
-      head.appendChild(el('h3', null, group.name));
+      head.appendChild(el('h3', null, I18N.name(group)));
       head.appendChild(el('span', 'n', onCount + '/' + members.length));
 
-      var all = el('button', 'btn btn-sm btn-quiet', onCount === members.length ? 'None' : 'All');
+      var all = el('button', 'btn btn-sm btn-quiet', I18N.t(onCount === members.length ? 'foods.none' : 'foods.all'));
       all.addEventListener('click', function () {
         Library.setMany(kind, members.map(function (i) { return i.id; }), onCount !== members.length);
         libraryChanged();
@@ -429,7 +436,7 @@
 
     var body = el('span', 'pick-body');
     var name = el('span', 'pick-name');
-    name.appendChild(el('span', null, item.name));
+    name.appendChild(el('span', null, I18N.name(item)));
 
     (item.health || []).slice(0, 2).forEach(function (h) {
       name.appendChild(el('span', 'chip chip-health', I18N.healthName(h)));
@@ -439,7 +446,7 @@
     var meta = [];
     if (item.meals) { meta.push(item.meals.map(function (m) { return MEAL_LABEL(m); }).join(', ')); }
     if (item.mins) { meta.push(I18N.minutes(item.mins)); }
-    if (Library.isCustom(item.id)) { meta.push('yours'); }
+    if (Library.isCustom(item.id)) { meta.push(I18N.t('foods.yours')); }
     if (meta.length) { body.appendChild(el('span', 'pick-meta', meta.join(' · '))); }
     row.appendChild(body);
 
@@ -452,12 +459,12 @@
       var del = el('span', 'del');
       del.appendChild(icon('i-trash', 'icon-sm'));
       del.setAttribute('role', 'button');
-      del.setAttribute('aria-label', 'Delete ' + item.name);
+      del.setAttribute('aria-label', I18N.t('foods.delete', { name: I18N.name(item) }));
       del.addEventListener('click', function (e) {
         e.stopPropagation();
         Library.remove(kind, item.id);
         libraryChanged();
-        toast('Removed ' + item.name);
+        toast(I18N.t('foods.removed', { name: I18N.name(item) }));
       });
       row.appendChild(del);
     }
@@ -502,7 +509,7 @@
       var sel = el('select', 'select');
       sel.style.maxWidth = '100%';
       CATEGORIES.forEach(function (c) {
-        var o = el('option', null, c.name);
+        var o = el('option', null, I18N.name(c));
         o.value = c.id;
         sel.appendChild(o);
       });
@@ -517,7 +524,7 @@
       kField.appendChild(el('label', null, I18N.t('foods.type')));
       var krow = el('div', 'toggle-row');
       ADDON_KINDS.filter(function (k) { return k.id !== 'veg'; }).forEach(function (k) {
-        var b = el('button', k.id === draft.addonKind ? 'is-on' : null, k.name);
+        var b = el('button', k.id === draft.addonKind ? 'is-on' : null, I18N.name(k));
         b.addEventListener('click', function () {
           draft.addonKind = k.id;
           Array.prototype.forEach.call(krow.children, function (c) { c.classList.remove('is-on'); });
@@ -591,9 +598,9 @@
 
   function kindName(id) {
     for (var i = 0; i < ADDON_KINDS.length; i++) {
-      if (ADDON_KINDS[i].id === id) { return ADDON_KINDS[i].short; }
+      if (ADDON_KINDS[i].id === id) { return I18N.shortName(ADDON_KINDS[i]); }
     }
-    return 'Veg';
+    return I18N.shortName(ADDON_KINDS[0]);
   }
 
   function renderProteinGrid() {
@@ -626,7 +633,7 @@
       var b = el('button', 'sheet-opt');
       b.setAttribute('aria-pressed', String(k.id === current));
       b.appendChild(icon(k.id === 'veg' ? 'i-leaf' : 'i-plus'));
-      b.appendChild(el('span', null, k.name));
+      b.appendChild(el('span', null, I18N.name(k)));
 
       if (!available) {
         b.appendChild(el('span', 'chip chip-protein', I18N.t('foods.noneTicked')));
@@ -642,7 +649,7 @@
     });
 
     openSheet(day + ' · ' + MEAL_LABEL(meal),
-      'The vegetarian food is cooked either way. This only adds a dish beside it.', list);
+      I18N.t('settings.proteinSheet'), list);
   }
 
   function renderQuickfills() {
@@ -978,10 +985,14 @@
     if (!I18N.set(id)) { return false; }
     Store.setPref('lang', id);
     I18N.apply();
+    /* Everything that draws its own text, not just the screens — the
+       households list was rendered once at boot and would otherwise
+       keep whatever language the phone happened to start in. */
     renderLangs();
+    renderHouses();
+    renderQuickfills();
     renderAll();
     renderFoods();
-    renderQuickfills();
     renderStorage();
     return true;
   }
@@ -1128,52 +1139,22 @@
 
   /* ---------------- storage, as the settings screen sees it ---------------- */
 
+  /* One line under the settings, not a card. With no backup to point
+     at, a paragraph about eviction would be worry with nothing to do
+     about it — so this says where the data is, and warns only in the
+     one case that really does throw it away. */
   function renderStorage() {
+    var note = $('storage-note');
+    if (!note) { return; }
+
     var info = Store.status();
-    var where = $('storage-where');
-    if (!where) { return; }
-
-    where.textContent = I18N.t(info.labelKey);
-
-    $('storage-note').textContent = I18N.t(
-      !info.durable ? 'storage.noteNone' :
-      info.persistent ? 'storage.notePermanent' : 'storage.noteSaved');
-
-    $('storage-badge').textContent = I18N.t(info.persistent ? 'storage.permanent' :
-      (info.durable ? 'storage.saved' : 'storage.tab'));
-    $('storage-badge').className = 'pill' + (info.persistent ? ' pill-good' : '');
+    var text = I18N.t('settings.footnote');
+    if (!info.persistent) { text += ' ' + I18N.t('settings.footnoteWarn'); }
+    note.textContent = text;
   }
 
-  function backupNow() {
-    Store.backup().then(function (file) {
-      Exporter.save(new Blob([file.bytes], { type: file.type }), file.name);
-      toast(I18N.t('toast.backupSaved'));
-    }).catch(function () { toast(I18N.t('toast.backupFailed')); });
-  }
-
-  function restorePicked(e) {
-    var file = e.target.files && e.target.files[0];
-    e.target.value = '';                 /* so the same file can be picked twice */
-    if (!file) { return; }
-
-    file.arrayBuffer()
-      .then(Store.restore)
-      .then(function (restored) {
-        if (!restored) { toast(I18N.t('toast.notBackup')); return; }
-
-        load();
-        if (!state.week) {
-          state.week = Planner.generateWeek(state.settings, {}, null);
-          save();
-        }
-        selectedDay = Planner.todayIndex();
-        syncSettings(); renderQuickfills(); renderAll(); renderFoods();
-        renderStorage(); renderHouses();
-        toast(I18N.t('toast.backupRestored'));
-      })
-      .catch(function () { toast(I18N.t('toast.unreadable')); });
-  }
-
+  /* No stored choice yet: take the phone's own language, so a Tamil
+     handset opens in Tamil rather than asking twice. */
   function guessLanguage() {
     var tags = navigator.languages || [navigator.language || 'en'];
     for (var i = 0; i < tags.length; i++) {
@@ -1293,10 +1274,6 @@
         toast(I18N.t('toast.reset'));
       });
     });
-
-    $('btn-backup').addEventListener('click', backupNow);
-    $('btn-restore').addEventListener('click', function () { $('restore-file').click(); });
-    $('restore-file').addEventListener('change', restorePicked);
 
     $('btn-rerun-setup').addEventListener('click', function () { startSetup('settings'); });
 
