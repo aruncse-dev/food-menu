@@ -9,8 +9,14 @@
 <meta name="theme-color" content="#13100d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍛</text></svg>">
 <link rel="stylesheet" href="css/styles.css">
+<!-- The database engine is ~580 KB over the wire and cached from then on.
+     Starting it here means it downloads alongside the CSS rather than after it. -->
+<link rel="modulepreload" href="vendor/sqlite/sqlite3.mjs">
+<link rel="preload" as="fetch" href="vendor/sqlite/sqlite3.wasm" crossorigin>
 </head>
-<body>
+<body class="is-booting">
+
+<div class="boot" id="boot"><span class="boot-spin"></span>Opening your menu…</div>
 
 <!-- Icon sprite: inline SVG rather than emoji, which render differently
      on every platform and read as placeholders. These inherit colour. -->
@@ -53,6 +59,7 @@
     <symbol id="i-copy" viewBox="0 0 24 24">
       <rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5.5A2.5 2.5 0 017.5 3H15"/>
     </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4M5 21h14"/></symbol>
     <symbol id="i-reset" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 11-2.8-6.3M20 4v5h-5"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
@@ -268,10 +275,30 @@
     <div class="rule"><span>Data</span></div>
 
     <div class="card">
+      <div class="field field-stack">
+        <div class="field-text">
+          <h3>Where this is kept <span class="pill" id="storage-badge">Saved</span></h3>
+          <p id="storage-where">Checking…</p>
+          <p class="hint" id="storage-note"></p>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-text">
+          <h3>Backup</h3>
+          <p>Saves the whole database as one file. The only copy that outlives this browser.</p>
+        </div>
+        <div class="field-ctl field-ctl-pair">
+          <button class="btn" id="btn-backup"><svg class="icon icon-sm"><use href="#i-download"/></svg> Save</button>
+          <button class="btn" id="btn-restore"><svg class="icon icon-sm"><use href="#i-upload"/></svg> Restore</button>
+          <input type="file" id="restore-file" accept=".sqlite3,.db,.json,application/json" hidden>
+        </div>
+      </div>
+
       <div class="field">
         <div class="field-text">
           <h3>Start over</h3>
-          <p>Clears the plan, the settings and your own dishes from this browser.</p>
+          <p>Erases the plan, your food list and your own dishes from this browser.</p>
         </div>
         <div class="field-ctl">
           <button class="btn" id="btn-reset"><svg class="icon icon-sm"><use href="#i-reset"/></svg> Reset</button>
@@ -304,6 +331,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="js/db.js"></script>
 <script src="js/data.js"></script>
 <script src="js/library.js"></script>
 <script src="js/planner.js"></script>

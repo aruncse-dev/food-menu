@@ -288,19 +288,23 @@ var Exporter = (function () {
     });
   }
 
+  /* Handing the browser a file, whatever the file is — the timetable
+     image here, a database backup from the settings screen. */
+  function save(blob, filename) {
+    if (!blob) { return false; }
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'menu-week.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    return true;
+  }
+
   function download(canvas, filename) {
-    return toBlob(canvas).then(function (blob) {
-      if (!blob) { return false; }
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename || 'menu-week.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-      return true;
-    });
+    return toBlob(canvas).then(function (blob) { return save(blob, filename); });
   }
 
   /* The native share sheet needs HTTPS, so it is dead on file://. */
@@ -321,5 +325,5 @@ var Exporter = (function () {
     });
   }
 
-  return { render: render, asText: asText, download: download, share: share };
+  return { render: render, asText: asText, download: download, save: save, share: share };
 })();

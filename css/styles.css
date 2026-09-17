@@ -433,6 +433,49 @@ body {
 .field-text p { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
 .field-ctl { flex: none; padding-top: 1px; }
 
+/* Two buttons where a field normally carries one. They wrap under the
+   text on a narrow phone rather than squeezing the description. */
+.field-ctl-pair { display: flex; gap: 8px; flex-wrap: wrap; }
+.field-stack { display: block; }
+
+.field-text p.hint { margin-top: 8px; font-size: 12.5px; color: var(--ink-3); }
+
+.pill {
+  display: inline-block; vertical-align: 2px; margin-left: 8px;
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--surface-3); color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+
+.pill-good { background: var(--sage-bg); color: var(--sage); }
+
+/* ---------- boot ----------
+   The database engine has to load before the app knows what the plan
+   is. That is one download on the first visit and the HTTP cache from
+   then on, but a blank screen for a second reads as broken. */
+
+.boot {
+  position: fixed; inset: 0; z-index: 90;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--bg); color: var(--ink-2);
+  font-size: 14px;
+}
+
+body:not(.is-booting) .boot { display: none; }
+
+.boot-spin {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid var(--border-2); border-top-color: var(--saffron);
+  animation: boot-spin .7s linear infinite;
+}
+
+@keyframes boot-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .boot-spin { animation-duration: 2.4s; }
+}
+
 /* ---------- protein grid ---------- */
 
 .pgrid {

@@ -7,7 +7,6 @@
 (function () {
   'use strict';
 
-  var STORE_KEY = 'food-menu/v2';
   var SVG_NS = 'http://www.w3.org/2000/svg';
 
   var MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
@@ -64,33 +63,35 @@
   }
 
   /* ---------------- storage ----------------
-     localStorage throws in private mode and some file:// contexts, so
-     every access is guarded and the app stays usable without it. */
+     js/db.js owns the database and every fallback below it. This side
+     only knows how to turn a snapshot into running state and back. */
 
   function load() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-      if (!saved) { return false; }
+    var saved = Store.read();
+    if (!saved) { return false; }
 
-      Library.hydrate(saved.library);
-      state.settings = Object.assign(Planner.defaultSettings(), saved.settings || {});
-      state.locked = saved.locked || {};
-      state.week = (saved.week && saved.week.length === 7) ? saved.week : null;
-      return !!state.week;
-    } catch (e) {
-      return false;
+    Library.hydrate(saved.library);
+    state.settings = Object.assign(Planner.defaultSettings(), saved.settings || {});
+
+    /* The grid always holds all 21 slots, so an empty one means damage
+       rather than a household that eats no protein. Fall back to the
+       defaults instead of leaving the planner without a grid to read. */
+    if (!state.settings.protein || !Object.keys(state.settings.protein).length) {
+      state.settings.protein = Planner.defaultSettings().protein;
     }
+
+    state.locked = saved.locked || {};
+    state.week = (saved.week && saved.week.length === 7) ? saved.week : null;
+    return !!state.week;
   }
 
   function save() {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({
-        settings: state.settings,
-        library: Library.serialise(),
-        week: state.week,
-        locked: state.locked
-      }));
-    } catch (e) { /* the plan still works for this session */ }
+    Store.save({
+      settings: state.settings,
+      library: Library.serialise(),
+      week: state.week,
+      locked: state.locked
+    });
   }
 
   /* ---------------- plan actions ---------------- */
@@ -935,7 +936,72 @@
     setupReturn = null;
   }
 
+  /* ---------------- storage, as the settings screen sees it ---------------- */
+
+  function renderStorage() {
+    var info = Store.status();
+    var where = $('storage-where');
+    if (!where) { return; }
+
+    where.textContent = info.label;
+
+    var note = $('storage-note');
+    if (!info.durable) {
+      note.textContent = 'Nothing is being saved. This browser will not let the app store ' +
+        'anything, so the plan lasts until you close the tab. Back it up if you want to keep it.';
+    } else if (info.persistent) {
+      note.textContent = 'Marked permanent, so Chrome will not clear it to free up space. ' +
+        'It survives closing the browser and restarting the phone.';
+    } else {
+      note.textContent = 'Saved, but not marked permanent — Chrome may clear it if the device ' +
+        'runs very low on space. A private window always clears it when the last one closes.';
+    }
+
+    $('storage-badge').textContent = info.persistent ? 'Permanent' :
+      (info.durable ? 'Saved' : 'This tab only');
+    $('storage-badge').className = 'pill' + (info.persistent ? ' pill-good' : '');
+  }
+
+  function backupNow() {
+    Store.backup().then(function (file) {
+      Exporter.save(new Blob([file.bytes], { type: file.type }), file.name);
+      toast('Backup saved');
+    }).catch(function () { toast('Could not make a backup'); });
+  }
+
+  function restorePicked(e) {
+    var file = e.target.files && e.target.files[0];
+    e.target.value = '';                 /* so the same file can be picked twice */
+    if (!file) { return; }
+
+    file.arrayBuffer()
+      .then(Store.restore)
+      .then(function (restored) {
+        if (!restored) { toast('That is not a backup file'); return; }
+
+        load();
+        if (!state.week) {
+          state.week = Planner.generateWeek(state.settings, {}, null);
+          save();
+        }
+        selectedDay = Planner.todayIndex();
+        syncSettings(); renderAll(); renderFoods(); renderStorage();
+        toast('Backup restored');
+      })
+      .catch(function () { toast('Could not read that file'); });
+  }
+
   function init() {
+    Store.init()
+      .catch(function () { /* db.js already degrades; boot regardless */ })
+      .then(boot);
+  }
+
+  function boot() {
+    document.body.classList.remove('is-booting');
+    var splash = $('boot');
+    if (splash) { splash.remove(); }
+
     var returning = load();
 
     if (!returning) {
@@ -1016,22 +1082,29 @@
       });
 
     $('btn-reset').addEventListener('click', function () {
-      try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
-      Library.reset();
-      state.settings = Planner.defaultSettings();
-      state.locked = {};
-      selectedDay = Planner.todayIndex();
-      state.week = Planner.generateWeek(state.settings, {}, null);
-      save();
-      syncSettings(); renderAll(); renderFoods();
-      toast('Back to defaults');
+      if (!confirm('Erase the plan, your food list and your own dishes?')) { return; }
+      Store.reset().then(function () {
+        Library.reset();
+        state.settings = Planner.defaultSettings();
+        state.locked = {};
+        selectedDay = Planner.todayIndex();
+        state.week = Planner.generateWeek(state.settings, {}, null);
+        save();
+        syncSettings(); renderAll(); renderFoods(); renderStorage();
+        toast('Back to defaults');
+      });
     });
+
+    $('btn-backup').addEventListener('click', backupNow);
+    $('btn-restore').addEventListener('click', function () { $('restore-file').click(); });
+    $('restore-file').addEventListener('change', restorePicked);
 
     $('btn-rerun-setup').addEventListener('click', function () { startSetup('settings'); });
 
     bindSetup();
     renderQuickfills();
     syncSettings();
+    renderStorage();
     renderAll();
     showScreen('today');
 

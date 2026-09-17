@@ -12,7 +12,8 @@ Open `index.html` in a browser. That is the whole setup.
 
 No build step, no `npm install`, no server, no account, no network. Plain HTML, CSS and JavaScript,
 written to work straight off the disk over `file://` — classic `<script src>` tags rather than ES
-modules, hand-written CSS rather than a CDN, and system fonts only.
+modules, hand-written CSS rather than a CDN, and system fonts only. SQLite is vendored into
+`vendor/sqlite/` for the same reason: nothing is fetched from a CDN at runtime.
 
 Phone first, because that is what you are holding at 7am in the kitchen.
 
@@ -68,7 +69,51 @@ day; from Week, all seven. Both go through the same renderer — one day is just
 single row — and both offer share, save as image, print and copy-as-text. Drawn on a canvas, so it
 works offline with nothing installed.
 
-Everything is kept in `localStorage`. Nothing leaves the device.
+Nothing leaves the device.
+
+## Where your data lives
+
+A SQLite database, held by the browser. The plan, your food list, your own dishes and the protein
+timetable are rows in it. It survives reloads, tab closes, browser restarts and reboots.
+
+Being straight about what that does and does not buy:
+
+- **Moving off `localStorage` is not what makes it durable.** Chrome keeps every storage API for an
+  origin in one bucket and evicts the bucket whole, so `localStorage` was never the weak link.
+- **`navigator.storage.persist()` is.** The app asks for it on every start. Granted, Chrome will not
+  clear the data to reclaim space. Chrome decides based on how much you use the site, and installing
+  it to the home screen makes it a yes.
+- **Backup is the only copy that outlives the browser.** Settings → Backup writes the whole database
+  to one file. Restore reads it back. Clearing site data, switching phone, a lost device — that file
+  is the answer to all three, and it is the same file you would hand to someone else in the house.
+- **Private windows are wiped, by design.** Chrome throws away everything an incognito session
+  stored the moment its last window closes, and no web app can change that. Inside the session the
+  database is real — reload, open another tab, it is all still there. Settings says which of these
+  you are in rather than guessing.
+
+The exported file is an ordinary SQLite database, so it opens in any SQLite tool:
+
+```sql
+SELECT name, meal, json_extract(body, '$.main') AS main FROM plan ORDER BY day;
+```
+
+| Table | What is in it |
+|---|---|
+| `setting` | Health conscious, light dinners, quick breakfasts |
+| `protein` | The 7 × 3 grid, one row per meal |
+| `off_item` | Everything the house has unticked |
+| `custom_item` | Dishes, sides and protein dishes the house added |
+| `plan` | The current week, one row per meal, with what is kept |
+
+The database is stored as bytes in IndexedDB and loaded into the engine at startup. The obvious
+alternative is OPFS, where SQLite writes the file directly and incrementally — but that VFS needs
+`createSyncAccessHandle`, which the spec exposes to dedicated workers only, in every browser. Moving
+the whole database into a worker to avoid re-serialising something this small would buy complexity
+and nothing else. If the data grows past a few hundred kilobytes, that is the change to make.
+
+Where SQLite cannot load at all — off `file://`, mainly, where a dynamic `import()` is blocked — the
+app falls back to IndexedDB and then `localStorage`, and Backup writes JSON instead. Settings always
+names which one is live.
 
 ## Settings
 
@@ -121,10 +166,12 @@ language switch rather than something to retype later.
 |---|---|
 | `index.html` | Four screens, the first-run setup, the sheet and the icon sprite |
 | `css/styles.css` | All styling, dark and light |
+| `js/db.js` | The database, every fallback under it, backup and restore |
 | `js/data.js` | **The suggested food list** — mains, sides, protein dishes |
 | `js/library.js` | What this household actually eats: what is switched off, what they added |
 | `js/planner.js` | The generator |
 | `js/export.js` | The timetable image, text export, native share |
 | `js/app.js` | Storage, rendering, wiring |
+| `vendor/sqlite/` | SQLite compiled to WebAssembly, vendored so it works offline |
 | `docs/deployment.md` | Putting it on Vercel |
 | `docs/ai-agent.md` | Adding a free AI planner, and why you should not train your own model |
