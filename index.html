@@ -132,6 +132,9 @@
           <h1 class="page-title" id="today-title">Today</h1>
           <p class="page-sub" id="today-date"></p>
         </div>
+        <button class="btn btn-icon" id="btn-share-day" title="Share this day" aria-label="Share this day">
+          <svg class="icon"><use href="#i-share"/></svg>
+        </button>
         <button class="btn btn-icon" id="btn-new-day" title="New ideas for this day" aria-label="New ideas for this day">
           <svg class="icon"><use href="#i-shuffle"/></svg>
         </button>
@@ -150,6 +153,9 @@
           <h1 class="page-title">This week</h1>
           <p class="page-sub" id="week-range"></p>
         </div>
+        <button class="btn btn-icon" id="btn-share-week" title="Share the week" aria-label="Share the week">
+          <svg class="icon"><use href="#i-share"/></svg>
+        </button>
         <button class="btn btn-icon" id="btn-new-week" title="New plan" aria-label="New plan">
           <svg class="icon"><use href="#i-shuffle"/></svg>
         </button>
@@ -192,27 +198,6 @@
     <div id="foods-body"></div>
   </section>
 
-  <!-- ===================== SHARE ===================== -->
-  <section class="screen" id="screen-export" hidden>
-    <header class="page-head">
-      <p class="eyebrow">Ready to send</p>
-      <h1 class="page-title">The timetable</h1>
-      <p class="page-sub">For the fridge door, or the family group.</p>
-    </header>
-    <div class="preview">
-      <canvas id="export-canvas" role="img" aria-label="Weekly menu timetable"></canvas>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary btn-block" id="btn-share">
-        <svg class="icon"><use href="#i-share"/></svg> Share
-      </button>
-      <div class="pair">
-        <button class="btn" id="btn-download"><svg class="icon"><use href="#i-download"/></svg> Save</button>
-        <button class="btn" id="btn-print"><svg class="icon"><use href="#i-print"/></svg> Print</button>
-      </div>
-      <button class="btn btn-block" id="btn-copy"><svg class="icon"><use href="#i-copy"/></svg> Copy as text</button>
-    </div>
-  </section>
 
   <!-- ===================== SETTINGS ===================== -->
   <section class="screen" id="screen-settings" hidden>
@@ -305,7 +290,6 @@
   <button id="tab-today" role="tab" aria-selected="true"><svg class="icon icon-lg"><use href="#i-today"/></svg>Today</button>
   <button id="tab-week" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-week"/></svg>Week</button>
   <button id="tab-foods" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-foods"/></svg>Foods</button>
-  <button id="tab-export" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-export"/></svg>Share</button>
   <button id="tab-settings" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-settings"/></svg>Settings</button>
 </nav>
 

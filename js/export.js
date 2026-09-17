@@ -126,11 +126,11 @@ var Exporter = (function () {
 
     ctx.fillStyle = '#ffffff';
     ctx.font = font(700, 48, SERIF);
-    ctx.fillText('Menu for the week', PAD, 116);
+    ctx.fillText(opts.title || 'Menu for the week', PAD, 116);
 
     ctx.fillStyle = 'rgba(255,255,255,0.82)';
     ctx.font = font(600, 24);
-    ctx.fillText(rangeLabel(opts.monday), PAD, 152);
+    ctx.fillText(opts.subtitle || rangeLabel(opts.monday), PAD, 152);
 
     /* ---- column headings ---- */
     var colW = (W - PAD * 2 - DAYCOL_W - GAP * 3) / 3;
@@ -262,8 +262,10 @@ var Exporter = (function () {
     return s;
   }
 
-  function asText(week) {
-    var out = ['Menu for the week', ''];
+  /* Takes any number of day rows, so one day exports exactly like
+     seven — the timetable just has a single line. */
+  function asText(week, title) {
+    var out = [title || 'Menu for the week', ''];
 
     week.forEach(function (row) {
       out.push((DAY_FULL[row.day] || row.day).toUpperCase());
@@ -308,12 +310,12 @@ var Exporter = (function () {
       var file = new File([blob], 'menu-week.png', { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        return navigator.share({ files: [file], title: 'Menu for the week' })
+        return navigator.share({ files: [file], title: text.split('\n')[0] })
           .then(function () { return 'shared'; })
           .catch(function (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; });
       }
 
-      return navigator.share({ title: 'Menu for the week', text: text })
+      return navigator.share({ title: text.split('\n')[0], text: text })
         .then(function () { return 'shared'; })
         .catch(function (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; });
     });

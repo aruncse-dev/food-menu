@@ -13,7 +13,7 @@
   var MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
   var MEAL_SHORT = { breakfast: 'B', lunch: 'L', dinner: 'D' };
 
-  var SCREENS = ['today', 'week', 'foods', 'export', 'settings'];
+  var SCREENS = ['today', 'week', 'foods', 'settings'];
 
   var state = {
     settings: Planner.defaultSettings(),
@@ -694,14 +694,91 @@
     renderProteinGrid();
   }
 
-  /* ---------------- export ---------------- */
+  /* ---------------- share ----------------
+     Share used to be its own tab, which spent a nav slot on something
+     people do occasionally. It is now a sheet opened from wherever
+     the thing being shared already is. */
 
-  function renderExport() {
-    Exporter.render($('export-canvas'), state.week, { monday: dateFor(0) });
+  var shareCanvas = null;
+  var shareText = '';
+
+  function openShareSheet(rows, title, subtitle, filename) {
+    var body = el('div');
+
+    var preview = el('div', 'preview');
+    shareCanvas = document.createElement('canvas');
+    shareCanvas.setAttribute('role', 'img');
+    shareCanvas.setAttribute('aria-label', title);
+    preview.appendChild(shareCanvas);
+    body.appendChild(preview);
+
+    Exporter.render(shareCanvas, rows, { monday: dateFor(0), title: title, subtitle: subtitle });
+    shareText = Exporter.asText(rows, title);
+
+    var actions = el('div', 'actions');
+
+    var share = el('button', 'btn btn-primary btn-block');
+    share.appendChild(icon('i-share'));
+    share.appendChild(el('span', null, 'Share'));
+    share.addEventListener('click', function () {
+      Exporter.share(shareCanvas, shareText).then(function (r) {
+        if (r === 'unsupported') { toast('Sharing needs a phone browser — save the image instead'); }
+        else if (r === 'failed') { toast('Could not open the share sheet'); }
+        else if (r === 'shared') { closeSheet(); }
+      });
+    });
+    actions.appendChild(share);
+
+    var pair = el('div', 'pair');
+
+    var dl = el('button', 'btn');
+    dl.appendChild(icon('i-download'));
+    dl.appendChild(el('span', null, 'Save'));
+    dl.addEventListener('click', function () {
+      Exporter.download(shareCanvas, filename).then(function (ok) {
+        toast(ok ? 'Image saved' : 'Could not save the image');
+      });
+    });
+    pair.appendChild(dl);
+
+    var pr = el('button', 'btn');
+    pr.appendChild(icon('i-print'));
+    pr.appendChild(el('span', null, 'Print'));
+    pr.addEventListener('click', function () { window.print(); });
+    pair.appendChild(pr);
+
+    actions.appendChild(pair);
+
+    var cp = el('button', 'btn btn-block');
+    cp.appendChild(icon('i-copy'));
+    cp.appendChild(el('span', null, 'Copy as text'));
+    cp.addEventListener('click', function () { copyText(shareText); });
+    actions.appendChild(cp);
+
+    body.appendChild(actions);
+
+    openSheet(title, subtitle, body);
   }
 
-  function copyText() {
-    var text = Exporter.asText(state.week);
+  function shareWeek() {
+    openShareSheet(state.week, 'Menu for the week',
+      fmt(dateFor(0), { day: 'numeric', month: 'short' }) + ' – ' +
+      fmt(dateFor(6), { day: 'numeric', month: 'short' }),
+      'menu-week.png');
+  }
+
+  /* One day renders through exactly the same code — the timetable
+     simply has a single row. */
+  function shareDay() {
+    var date = dateFor(selectedDay);
+    var isToday = selectedDay === Planner.todayIndex();
+    openShareSheet([state.week[selectedDay]],
+      (isToday ? "Today's" : fmt(date, { weekday: 'long' }) + "'s") + ' menu',
+      fmt(date, { weekday: 'long', day: 'numeric', month: 'long' }),
+      'menu-' + DAY_NAMES[selectedDay].toLowerCase() + '.png');
+  }
+
+  function copyText(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () { toast('Menu copied'); },
         function () { legacyCopy(text); });
@@ -741,7 +818,6 @@
       $('screen-' + s).hidden = s !== name;
       $('tab-' + s).setAttribute('aria-selected', String(s === name));
     });
-    if (name === 'export') { renderExport(); }
     if (name === 'foods') { renderFoods(); }
     if (name === 'settings') { syncSettings(); }
     window.scrollTo(0, 0);
@@ -750,7 +826,6 @@
   function renderAll() {
     renderToday();
     renderWeek();
-    if (currentScreen === 'export') { renderExport(); }
   }
 
   /* ---------------- first run ----------------
@@ -922,23 +997,8 @@
       if (e.key === 'Escape' && !$('sheet').hidden) { closeSheet(); }
     });
 
-    /* export */
-    $('btn-copy').addEventListener('click', copyText);
-
-    $('btn-download').addEventListener('click', function () {
-      Exporter.download($('export-canvas'), 'menu-week.png').then(function (ok) {
-        toast(ok ? 'Image saved' : 'Could not save the image');
-      });
-    });
-
-    $('btn-print').addEventListener('click', function () { window.print(); });
-
-    $('btn-share').addEventListener('click', function () {
-      Exporter.share($('export-canvas'), Exporter.asText(state.week)).then(function (r) {
-        if (r === 'unsupported') { toast('Sharing needs a phone browser — save the image instead'); }
-        else if (r === 'failed') { toast('Could not open the share sheet'); }
-      });
-    });
+    $('btn-share-day').addEventListener('click', shareDay);
+    $('btn-share-week').addEventListener('click', shareWeek);
 
     /* settings */
     $('opt-lean').addEventListener('change', function (e) {

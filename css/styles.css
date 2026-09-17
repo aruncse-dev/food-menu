@@ -403,8 +403,11 @@ body {
 
 .preview canvas { display: block; width: 100%; height: auto; }
 
-.actions { display: grid; gap: 10px; padding: 18px 20px 4px; }
+.actions { display: grid; gap: 10px; padding: 16px 0 4px; }
 .actions .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* inside the share sheet the preview has no page margin of its own */
+.sheet .preview { margin: 0; }
 
 /* ---------- cards & fields ---------- */
 
@@ -761,9 +764,25 @@ input.text { width: 100%; font-weight: 500; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
+/* Printing means printing the timetable that is open in the sheet,
+   so everything around it is stripped rather than hidden wholesale. */
 @media print {
-  .nav, .toast, .actions, .page-head, .sheet { display: none !important; }
-  body { max-width: none; padding: 0; box-shadow: none; }
+  body > *:not(.sheet) { display: none !important; }
+  body { max-width: none; padding: 0; box-shadow: none; background: #fff; }
+
+  .sheet {
+    position: static; inset: auto;
+    display: block; background: none;
+    opacity: 1 !important; pointer-events: auto;
+  }
+
+  .sheet-panel {
+    max-width: none; max-height: none; overflow: visible;
+    padding: 0; border-radius: 0; background: #fff;
+    transform: none !important;
+  }
+
+  .sheet-grip, .sheet h2, .sheet p.hint, .actions { display: none !important; }
   .preview { border: 0; box-shadow: none; margin: 0; }
 }
 

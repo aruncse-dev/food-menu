@@ -60,9 +60,13 @@ own dishes are all left alone — and cancelling changes nothing.
 - **Foods** — your food list. Tick what your house eats; anything unticked is never planned. Add
   your own dishes, sides and protein dishes. Separate lists for breakfast, lunch, dinner, sides and
   protein.
-- **Share** — the week as a real timetable image for the fridge or the family group, plus print and
-  copy-as-text. Drawn on a canvas, so it works offline with nothing installed.
 - **Settings** — the protein timetable, plus three switches.
+
+Sharing is not a screen. The share button sits in the header of Today and Week, next to the one that
+rerolls them, and opens a sheet over whatever you were looking at. From Today it exports that one
+day; from Week, all seven. Both go through the same renderer — one day is just a timetable with a
+single row — and both offer share, save as image, print and copy-as-text. Drawn on a canvas, so it
+works offline with nothing installed.
 
 Everything is kept in `localStorage`. Nothing leaves the device.
 
@@ -115,12 +119,12 @@ language switch rather than something to retype later.
 
 | Path | What it is |
 |---|---|
-| `index.html` | Five screens, the first-run setup and the icon sprite |
+| `index.html` | Four screens, the first-run setup, the sheet and the icon sprite |
 | `css/styles.css` | All styling, dark and light |
 | `js/data.js` | **The suggested food list** — mains, sides, protein dishes |
 | `js/library.js` | What this household actually eats: what is switched off, what they added |
 | `js/planner.js` | The generator |
-| `js/export.js` | The timetable image, text export, share sheet |
+| `js/export.js` | The timetable image, text export, native share |
 | `js/app.js` | Storage, rendering, wiring |
 | `docs/deployment.md` | Putting it on Vercel |
 | `docs/ai-agent.md` | Adding a free AI planner, and why you should not train your own model |
