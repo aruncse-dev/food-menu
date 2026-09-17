@@ -1,44 +1,43 @@
-/* ------------------------------------------------------------------
-   Export: the week as a picture for the fridge or the family group.
+/* ==================================================================
+   Export: the week as a timetable.
 
-   Drawn straight onto a canvas rather than with a screenshot library,
-   so there is nothing to install and it works offline. Portrait and
-   phone-shaped, because it is going into a chat app.
-   ------------------------------------------------------------------ */
+   A real grid — days down the side, meals across the top — rather
+   than a long list. That is the shape people already read on a
+   school timetable, and it is what gets stuck on a fridge.
+
+   Drawn straight onto a canvas, so there is nothing to install and
+   it works offline.
+   ================================================================== */
 
 var Exporter = (function () {
   'use strict';
 
-  var W = 1080;
-  var PAD = 52;
-  var HEADER_H = 216;
-  var DAY_HEAD_H = 68;
-  var ROW_H = 100;
-  var ROW_GAP = 10;
-  var DAY_GAP = 26;
-  var FOOTER_H = 96;
+  var W = 1240;
+  var PAD = 40;
+  var HEADER_H = 176;
+  var COLHEAD_H = 50;
+  var DAYCOL_W = 132;
+  var GAP = 8;
+  var ROW_H = 152;
+  var FOOTER_H = 74;
 
-  var MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
-  var MEAL_SHORT = { breakfast: 'B', lunch: 'L', dinner: 'D' };
+  var MEAL_LABEL = { breakfast: 'BREAKFAST', lunch: 'LUNCH', dinner: 'DINNER' };
 
   /* The exported image is always light: it gets printed, and it lands
-     in chat threads on someone else's phone. */
+     on someone else's phone in a chat thread. */
   var C = {
-    bg: '#fbf7f0', surface: '#ffffff', border: '#e7ddcd',
-    ink: '#221d19', soft: '#6b6055', faint: '#9a8d7f',
-    green: '#2e6b41', greenBg: '#e6f0e7', greenInk: '#1f4b2d',
-    amber: '#b2741a', amberBg: '#fbefdb',
-    rust: '#b84e2a', rustBg: '#fae6de'
+    bg: '#faf5ec', surface: '#ffffff', alt: '#f6efe3', border: '#e4d7c3',
+    ink: '#1b1714', soft: '#6a5d4f', faint: '#9c8e7d',
+    saffron: '#b4620a', saffronDeep: '#8f4d06', saffronBg: '#fbebd5',
+    sage: '#43734f', sageBg: '#e5efe7',
+    chilli: '#b23a2b', chilliBg: '#fae4df'
   };
 
-  var MEAL_COLOR = {
-    breakfast: { fg: C.amber, bg: C.amberBg },
-    lunch:     { fg: C.greenInk, bg: C.greenBg },
-    dinner:    { fg: C.rust, bg: C.rustBg }
-  };
+  var SERIF = 'Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif';
+  var SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
-  function font(weight, size) {
-    return weight + ' ' + size + 'px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  function font(weight, size, family) {
+    return weight + ' ' + size + 'px ' + (family || SANS);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
@@ -51,37 +50,54 @@ var Exporter = (function () {
     ctx.closePath();
   }
 
-  /* Cuts text to fit with an ellipsis. Long side-lists are the norm,
-     so this is load-bearing rather than defensive. */
-  function fit(ctx, text, maxWidth) {
-    if (ctx.measureText(text).width <= maxWidth) { return text; }
-    var t = text;
-    while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) {
-      t = t.slice(0, -1);
+  /* Word wrap, capped. Cells are narrow, so this decides whether the
+     timetable reads or turns to mush. */
+  function wrap(ctx, text, maxWidth, maxLines) {
+    var words = String(text).split(/\s+/);
+    var lines = [];
+    var line = '';
+
+    for (var i = 0; i < words.length; i++) {
+      var next = line ? line + ' ' + words[i] : words[i];
+      if (ctx.measureText(next).width <= maxWidth || !line) {
+        line = next;
+      } else {
+        lines.push(line);
+        line = words[i];
+        if (lines.length === maxLines) { break; }
+      }
     }
-    return t.replace(/[\s·]+$/, '') + '…';
+
+    if (lines.length < maxLines && line) { lines.push(line); }
+
+    /* Anything that did not fit gets an ellipsis on the last line. */
+    if (lines.length === maxLines) {
+      var consumed = lines.join(' ').split(/\s+/).length;
+      if (consumed < words.length) {
+        var last = lines[maxLines - 1];
+        while (last.length > 1 && ctx.measureText(last + '…').width > maxWidth) {
+          last = last.slice(0, -1);
+        }
+        lines[maxLines - 1] = last.replace(/[\s,·]+$/, '') + '…';
+      }
+    }
+
+    return lines;
   }
 
   function rangeLabel(monday) {
     var start = monday ? new Date(monday) : new Date();
-    if (!monday) {
-      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
-    }
+    if (!monday) { start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); }
     var end = new Date(start);
     end.setDate(start.getDate() + 6);
-
-    var opts = { day: 'numeric', month: 'short' };
-    return start.toLocaleDateString('en-GB', opts) + ' – ' +
-           end.toLocaleDateString('en-GB', opts);
+    var o = { day: 'numeric', month: 'short' };
+    return start.toLocaleDateString('en-GB', o) + ' – ' + end.toLocaleDateString('en-GB', o);
   }
 
   function render(canvas, week, opts) {
     opts = opts || {};
 
-    var height = HEADER_H + DAY_GAP +
-                 week.length * (DAY_HEAD_H + 3 * ROW_H + 2 * ROW_GAP + DAY_GAP) +
-                 FOOTER_H;
-
+    var height = HEADER_H + COLHEAD_H + week.length * ROW_H + FOOTER_H;
     canvas.width = W;
     canvas.height = height;
 
@@ -92,120 +108,143 @@ var Exporter = (function () {
     ctx.fillRect(0, 0, W, height);
 
     /* ---- header ---- */
-    ctx.fillStyle = C.green;
+    var grad = ctx.createLinearGradient(0, 0, W, HEADER_H);
+    grad.addColorStop(0, C.saffron);
+    grad.addColorStop(1, C.saffronDeep);
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, HEADER_H);
 
-    /* soft disc, matching the app's hero card */
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, W, HEADER_H);
-    ctx.clip();
-    ctx.fillStyle = 'rgba(255,255,255,0.07)';
-    ctx.beginPath();
-    ctx.arc(W - 90, -40, 230, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.rect(0, 0, W, HEADER_H); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); ctx.arc(W - 110, -50, 230, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    ctx.fillStyle = 'rgba(255,255,255,0.72)';
-    ctx.font = font(700, 24);
-    ctx.fillText("WHAT'S COOKING", PAD, 74);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = font(700, 21);
+    ctx.fillText("WHAT'S COOKING", PAD, 62);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = font(750, 52);
-    ctx.fillText("This week's menu", PAD, 134);
+    ctx.font = font(700, 48, SERIF);
+    ctx.fillText('Menu for the week', PAD, 116);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = font(600, 27);
-    ctx.fillText(rangeLabel(opts.monday), PAD, 178);
+    ctx.fillStyle = 'rgba(255,255,255,0.82)';
+    ctx.font = font(600, 24);
+    ctx.fillText(rangeLabel(opts.monday), PAD, 152);
 
-    /* ---- days ---- */
-    var y = HEADER_H + DAY_GAP;
-    var innerW = W - PAD * 2;
+    /* ---- column headings ---- */
+    var colW = (W - PAD * 2 - DAYCOL_W - GAP * 3) / 3;
+    var colX = function (i) { return PAD + DAYCOL_W + GAP + i * (colW + GAP); };
+    var headY = HEADER_H;
 
-    week.forEach(function (row) {
+    MEAL_ORDER.forEach(function (meal, i) {
+      var tint = meal === 'breakfast' ? C.saffronBg : meal === 'lunch' ? C.sageBg : C.chilliBg;
+      var fg = meal === 'breakfast' ? C.saffron : meal === 'lunch' ? C.sage : C.chilli;
+
+      ctx.fillStyle = tint;
+      roundRect(ctx, colX(i), headY + 8, colW, COLHEAD_H - 14, 10);
+      ctx.fill();
+
+      ctx.fillStyle = fg;
+      ctx.font = font(700, 19);
+      ctx.textAlign = 'center';
+      ctx.fillText(MEAL_LABEL[meal], colX(i) + colW / 2, headY + 36);
+      ctx.textAlign = 'left';
+    });
+
+    /* ---- rows ---- */
+    var y = HEADER_H + COLHEAD_H;
+
+    week.forEach(function (row, ri) {
       var weekend = row.day === 'Sat' || row.day === 'Sun';
-      var name = (DAY_FULL[row.day] || row.day).toUpperCase();
 
-      ctx.fillStyle = weekend ? C.rust : C.soft;
-      ctx.font = font(750, 25);
-      ctx.fillText(name, PAD, y + 40);
+      /* zebra banding, so the eye tracks across a wide row */
+      if (ri % 2 === 1) {
+        ctx.fillStyle = C.alt;
+        roundRect(ctx, PAD, y, W - PAD * 2, ROW_H - GAP, 12);
+        ctx.fill();
+      }
 
-      var nameW = ctx.measureText(name).width;
-      ctx.strokeStyle = C.border;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(PAD + nameW + 20, y + 32);
-      ctx.lineTo(W - PAD, y + 32);
-      ctx.stroke();
+      ctx.fillStyle = weekend ? C.chilli : C.soft;
+      ctx.font = font(700, 25, SERIF);
+      ctx.fillText(row.day, PAD + 14, y + 46);
 
-      y += DAY_HEAD_H;
+      ctx.fillStyle = C.faint;
+      ctx.font = font(600, 16);
+      ctx.fillText(weekend ? 'weekend' : 'weekday', PAD + 14, y + 70);
 
-      MEAL_ORDER.forEach(function (meal, mi) {
+      MEAL_ORDER.forEach(function (meal, ci) {
         var slot = row[meal];
-        var top = y + mi * (ROW_H + ROW_GAP);
-        var colors = MEAL_COLOR[meal];
+        var x = colX(ci);
+        var h = ROW_H - GAP;
 
         ctx.fillStyle = C.surface;
-        roundRect(ctx, PAD, top, innerW, ROW_H, 18);
+        roundRect(ctx, x, y, colW, h, 12);
         ctx.fill();
         ctx.strokeStyle = C.border;
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        /* meal badge */
-        ctx.fillStyle = colors.bg;
-        roundRect(ctx, PAD + 20, top + 20, 60, 60, 16);
-        ctx.fill();
+        var inner = colW - 28;
+        var tx = x + 14;
+        var ty = y + 34;
 
-        ctx.fillStyle = colors.fg;
-        ctx.font = font(750, 28);
-        ctx.textAlign = 'center';
-        ctx.fillText(MEAL_SHORT[meal], PAD + 50, top + 60);
-        ctx.textAlign = 'left';
+        if (!slot) {
+          ctx.fillStyle = C.faint;
+          ctx.font = font(400, 19);
+          ctx.fillText('—', tx, ty);
+          return;
+        }
 
-        if (!slot) { return; }
-
-        /* cooking time, right-aligned — measure it so the dish name
-           never runs underneath */
-        var timeText = slot.mins + ' min';
-        ctx.font = font(600, 22);
-        var timeW = ctx.measureText(timeText).width;
-        ctx.fillStyle = C.faint;
-        ctx.textAlign = 'right';
-        ctx.fillText(timeText, W - PAD - 24, top + 44);
-        ctx.textAlign = 'left';
-
-        var textX = PAD + 100;
-        var textW = innerW - 100 - timeW - 52;
-
+        /* dish name */
         ctx.fillStyle = C.ink;
-        ctx.font = font(700, 33);
-        ctx.fillText(fit(ctx, slot.dish, textW), textX, top + 46);
+        ctx.font = font(700, 24, SERIF);
+        wrap(ctx, slot.main, inner, 2).forEach(function (line) {
+          ctx.fillText(line, tx, ty);
+          ty += 28;
+        });
 
+        /* the protein, called out — it is what people scan for */
+        if (slot.addon) {
+          ctx.font = font(700, 17);
+          var label = slot.addon.name;
+          var lw = Math.min(ctx.measureText(label).width, inner - 22);
+          ctx.fillStyle = C.chilliBg;
+          roundRect(ctx, tx, ty - 15, lw + 22, 26, 7);
+          ctx.fill();
+          ctx.fillStyle = C.chilli;
+          ctx.save();
+          ctx.beginPath(); ctx.rect(tx, ty - 16, lw + 20, 28); ctx.clip();
+          ctx.fillText(label, tx + 11, ty + 3);
+          ctx.restore();
+          ty += 30;
+        }
+
+        /* sides */
         if (slot.sides && slot.sides.length) {
           ctx.fillStyle = C.soft;
-          ctx.font = font(400, 24);
-          ctx.fillText(fit(ctx, slot.sides.join(' · '), innerW - 100 - 40), textX, top + 78);
+          ctx.font = font(400, 17);
+          var room = Math.max(1, Math.floor((y + h - 12 - ty) / 21));
+          wrap(ctx, slot.sides.map(function (s) { return s.name; }).join(' · '), inner, Math.min(room, 3))
+            .forEach(function (line) {
+              ctx.fillText(line, tx, ty);
+              ty += 21;
+            });
         }
 
-        /* non-veg is the one thing worth spotting at a glance */
-        if (slot.badges && slot.badges.indexOf('nonveg') !== -1) {
-          ctx.font = font(750, 17);
-          var label = 'NON-VEG';
-          var lw = ctx.measureText(label).width;
-          ctx.fillStyle = C.rustBg;
-          roundRect(ctx, W - PAD - 24 - lw - 20, top + 58, lw + 20, 28, 8);
-          ctx.fill();
-          ctx.fillStyle = C.rust;
-          ctx.fillText(label, W - PAD - 24 - lw - 10, top + 78);
-        }
+        /* cooking time, bottom right */
+        ctx.fillStyle = C.faint;
+        ctx.font = font(600, 16);
+        ctx.textAlign = 'right';
+        ctx.fillText(slot.mins + ' min', x + colW - 14, y + h - 12);
+        ctx.textAlign = 'left';
       });
 
-      y += 3 * ROW_H + 2 * ROW_GAP + DAY_GAP;
+      y += ROW_H;
     });
 
     ctx.fillStyle = C.faint;
-    ctx.font = font(400, 22);
+    ctx.font = font(400, 19);
     ctx.fillText('Planned at home · one less thing to argue about', PAD, y + 34);
 
     return canvas;
@@ -213,17 +252,24 @@ var Exporter = (function () {
 
   /* ---------------- text ---------------- */
 
+  function slotText(slot) {
+    if (!slot) { return '—'; }
+    var s = slot.main;
+    if (slot.addon) { s += ' + ' + slot.addon.name; }
+    if (slot.sides && slot.sides.length) {
+      s += ' (' + slot.sides.map(function (x) { return x.name; }).join(', ') + ')';
+    }
+    return s;
+  }
+
   function asText(week) {
-    var out = ["What's cooking this week", ''];
+    var out = ['Menu for the week', ''];
 
     week.forEach(function (row) {
       out.push((DAY_FULL[row.day] || row.day).toUpperCase());
       MEAL_ORDER.forEach(function (meal) {
-        var slot = row[meal];
-        if (!slot) { return; }
-        var line = '  ' + MEAL_LABEL[meal] + ': ' + slot.dish;
-        if (slot.sides && slot.sides.length) { line += ' — ' + slot.sides.join(', '); }
-        out.push(line);
+        out.push('  ' + MEAL_LABEL[meal].charAt(0) +
+                 MEAL_LABEL[meal].slice(1).toLowerCase() + ': ' + slotText(row[meal]));
       });
       out.push('');
     });
@@ -255,21 +301,19 @@ var Exporter = (function () {
     });
   }
 
-  /* The native share sheet is what actually gets this into a family
-     chat from a phone. It needs HTTPS, so it is dead on file://. */
+  /* The native share sheet needs HTTPS, so it is dead on file://. */
   function share(canvas, text) {
     return toBlob(canvas).then(function (blob) {
       if (!blob || !navigator.share) { return 'unsupported'; }
-
       var file = new File([blob], 'menu-week.png', { type: 'image/png' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        return navigator.share({ files: [file], title: "This week's menu" })
+        return navigator.share({ files: [file], title: 'Menu for the week' })
           .then(function () { return 'shared'; })
           .catch(function (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; });
       }
 
-      return navigator.share({ title: "This week's menu", text: text })
+      return navigator.share({ title: 'Menu for the week', text: text })
         .then(function () { return 'shared'; })
         .catch(function (e) { return e && e.name === 'AbortError' ? 'cancelled' : 'failed'; });
     });

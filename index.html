@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>What's Cooking</title>
 <meta name="description" content="A daily and weekly meal timetable for the whole house.">
-<meta name="theme-color" content="#fbf7f0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#faf5ec" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#13100d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍛</text></svg>">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- Icon sprite. Inline SVG rather than emoji: emoji render differently on
-     every platform and look like placeholders. These inherit colour. -->
+<!-- Icon sprite: inline SVG rather than emoji, which render differently
+     on every platform and read as placeholders. These inherit colour. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="i-today" viewBox="0 0 24 24">
-      <rect x="3" y="5" width="18" height="16" rx="2.5"/>
-      <path d="M8 3v4M16 3v4M3 10h18"/><circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"/>
+      <rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M8 3v4M16 3v4M3 10h18"/>
+      <circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"/>
     </symbol>
     <symbol id="i-week" viewBox="0 0 24 24">
-      <path d="M9 6h12M9 12h12M9 18h12"/>
-      <circle cx="4" cy="6" r="1.3" fill="currentColor" stroke="none"/>
-      <circle cx="4" cy="12" r="1.3" fill="currentColor" stroke="none"/>
-      <circle cx="4" cy="18" r="1.3" fill="currentColor" stroke="none"/>
+      <rect x="3" y="4" width="18" height="17" rx="2.5"/>
+      <path d="M3 9h18M9 9v12M15 9v12"/>
+    </symbol>
+    <symbol id="i-foods" viewBox="0 0 24 24">
+      <path d="M4 4v7a3 3 0 006 0V4M7 11v9"/><path d="M17 4c-1.6 1.4-2.4 3.2-2.4 5.4 0 1.7.8 2.8 2.4 2.8s2.4-1.1 2.4-2.8c0-2.2-.8-4-2.4-5.4zM17 12.2V20"/>
     </symbol>
     <symbol id="i-export" viewBox="0 0 24 24">
-      <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/>
-      <path d="M14 3v5h5M9 13h6M9 17h4"/>
+      <rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M3 9h18M9 9v12"/>
     </symbol>
     <symbol id="i-settings" viewBox="0 0 24 24">
       <path d="M4 7h7M15 7h5M4 12h3M11 12h9M4 17h9M17 17h3"/>
@@ -36,10 +36,6 @@
     </symbol>
     <symbol id="i-shuffle" viewBox="0 0 24 24">
       <path d="M16 3h5v5M21 3l-8 8M16 21h5v-5M21 21l-6-6M3 21l7-7M3 3l5 5"/>
-    </symbol>
-    <symbol id="i-spark" viewBox="0 0 24 24">
-      <path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/>
-      <path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>
     </symbol>
     <symbol id="i-lock" viewBox="0 0 24 24">
       <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 118 0v3"/>
@@ -50,30 +46,80 @@
     <symbol id="i-share" viewBox="0 0 24 24">
       <path d="M12 16V3M8 7l4-4 4 4M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/>
     </symbol>
-    <symbol id="i-download" viewBox="0 0 24 24">
-      <path d="M12 3v13M8 12l4 4 4-4M5 21h14"/>
-    </symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v13M8 12l4 4 4-4M5 21h14"/></symbol>
     <symbol id="i-print" viewBox="0 0 24 24">
-      <path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/>
-      <path d="M7 14h10v7H7z"/>
+      <path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/>
     </symbol>
     <symbol id="i-copy" viewBox="0 0 24 24">
       <rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5.5A2.5 2.5 0 017.5 3H15"/>
     </symbol>
-    <symbol id="i-reset" viewBox="0 0 24 24">
-      <path d="M20.5 12a8.5 8.5 0 11-2.8-6.3M20 4v5h-5"/>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 11-2.8-6.3M20 4v5h-5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24">
+      <path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13M9 7V4h6v3"/>
     </symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.2 2"/>
+    <symbol id="i-leaf" viewBox="0 0 24 24">
+      <path d="M4 20C3 12 8 5 20 4c1 11-5 16-13 15z"/><path d="M4 20c4-6 8-9 12-10"/>
     </symbol>
   </defs>
 </svg>
 
 <main>
 
+  <!-- ===================== FIRST RUN ===================== -->
+  <!-- Two taps, once. Everything here can be changed later in
+       Settings, so nothing is a decision anyone has to get right. -->
+  <section class="screen setup" id="screen-setup" hidden>
+
+    <div class="setup-inner">
+      <div id="setup-step-1">
+        <p class="eyebrow">One quick thing</p>
+        <h1 class="page-title">What does your house eat?</h1>
+        <p class="page-sub">Vegetarian food is always cooked either way. This just decides what gets added beside it.</p>
+
+        <div class="opts">
+          <button class="opt" data-diet="veg">
+            <span class="opt-name">Pure vegetarian</span>
+            <span class="opt-sub">No egg, no meat</span>
+          </button>
+          <button class="opt" data-diet="egg">
+            <span class="opt-name">Vegetarian and egg</span>
+            <span class="opt-sub">Egg, but no meat</span>
+          </button>
+          <button class="opt" data-diet="nonveg">
+            <span class="opt-name">We eat non-veg too</span>
+            <span class="opt-sub">Chicken, fish, mutton</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="setup-step-2" hidden>
+        <p class="eyebrow">Last one</p>
+        <h1 class="page-title" id="setup-q2">How often?</h1>
+        <p class="page-sub">A rough starting point. You can set exact days later.</p>
+
+        <div class="opts" id="setup-freq"></div>
+
+        <label class="setup-check" id="setup-egg-wrap">
+          <input type="checkbox" id="setup-egg">
+          <span class="box"><svg class="icon icon-sm"><use href="#i-check"/></svg></span>
+          <span>
+            <strong>Egg with lunch, every day</strong>
+            <em>Some houses make this compulsory for the children.</em>
+          </span>
+        </label>
+      </div>
+
+      <button class="btn btn-quiet setup-skip" id="setup-skip">Skip, just show me a plan</button>
+    </div>
+
+  </section>
+
   <!-- ===================== TODAY ===================== -->
   <section class="screen" id="screen-today">
-
     <header class="page-head">
       <div class="head-row">
         <div>
@@ -86,20 +132,16 @@
         </button>
       </div>
     </header>
-
     <div class="day-strip" id="day-strip" role="group" aria-label="Pick a day"></div>
-
     <div id="today-body"></div>
-
   </section>
 
   <!-- ===================== WEEK ===================== -->
   <section class="screen" id="screen-week" hidden>
-
     <header class="page-head">
       <div class="head-row">
         <div>
-          <p class="eyebrow">21 meals planned</p>
+          <p class="eyebrow">Twenty-one meals</p>
           <h1 class="page-title">This week</h1>
           <p class="page-sub" id="week-range"></p>
         </div>
@@ -108,69 +150,143 @@
         </button>
       </div>
     </header>
-
-    <div class="rule"><span>Tap the padlock to keep a meal</span></div>
+    <div class="rule"><span>Padlock keeps a meal</span></div>
     <div id="week-body"></div>
-
   </section>
 
-  <!-- ===================== EXPORT ===================== -->
-  <section class="screen" id="screen-export" hidden>
-
+  <!-- ===================== FOODS ===================== -->
+  <section class="screen" id="screen-foods" hidden>
     <header class="page-head">
-      <p class="eyebrow">Ready to send</p>
-      <h1 class="page-title">Share the menu</h1>
-      <p class="page-sub">For the fridge door, or the family group.</p>
+      <p class="eyebrow">Your food list</p>
+      <h1 class="page-title">Foods</h1>
+      <p class="page-sub">Tick what your house eats. Anything unticked is never planned.</p>
     </header>
 
+    <div class="seg" id="foods-seg" role="tablist" aria-label="Food list">
+      <button data-tab="breakfast" role="tab" aria-selected="true">Breakfast</button>
+      <button data-tab="lunch" role="tab" aria-selected="false">Lunch</button>
+      <button data-tab="dinner" role="tab" aria-selected="false">Dinner</button>
+      <button data-tab="sides" role="tab" aria-selected="false">Sides</button>
+      <button data-tab="protein" role="tab" aria-selected="false">Protein</button>
+    </div>
+
+    <div class="searchbar">
+      <svg class="icon icon-sm"><use href="#i-search"/></svg>
+      <input type="search" id="foods-search" placeholder="Search dishes" aria-label="Search dishes">
+    </div>
+
+    <div class="listbar">
+      <span class="count" id="foods-count"></span>
+      <button class="btn btn-sm btn-quiet" id="btn-all">All</button>
+      <button class="btn btn-sm btn-quiet" id="btn-none">None</button>
+      <button class="btn btn-sm btn-primary" id="btn-add">
+        <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add
+      </button>
+    </div>
+
+    <div id="foods-body"></div>
+  </section>
+
+  <!-- ===================== SHARE ===================== -->
+  <section class="screen" id="screen-export" hidden>
+    <header class="page-head">
+      <p class="eyebrow">Ready to send</p>
+      <h1 class="page-title">The timetable</h1>
+      <p class="page-sub">For the fridge door, or the family group.</p>
+    </header>
     <div class="preview">
       <canvas id="export-canvas" role="img" aria-label="Weekly menu timetable"></canvas>
     </div>
-
     <div class="actions">
       <button class="btn btn-primary btn-block" id="btn-share">
         <svg class="icon"><use href="#i-share"/></svg> Share
       </button>
       <div class="pair">
-        <button class="btn" id="btn-download">
-          <svg class="icon"><use href="#i-download"/></svg> Save
-        </button>
-        <button class="btn" id="btn-print">
-          <svg class="icon"><use href="#i-print"/></svg> Print
-        </button>
+        <button class="btn" id="btn-download"><svg class="icon"><use href="#i-download"/></svg> Save</button>
+        <button class="btn" id="btn-print"><svg class="icon"><use href="#i-print"/></svg> Print</button>
       </div>
-      <button class="btn btn-block" id="btn-copy">
-        <svg class="icon"><use href="#i-copy"/></svg> Copy as text
-      </button>
+      <button class="btn btn-block" id="btn-copy"><svg class="icon"><use href="#i-copy"/></svg> Copy as text</button>
     </div>
-
   </section>
 
   <!-- ===================== SETTINGS ===================== -->
   <section class="screen" id="screen-settings" hidden>
-
     <header class="page-head">
       <p class="eyebrow">How your house eats</p>
       <h1 class="page-title">Settings</h1>
-      <p class="page-sub">Change anything and the plan rebuilds straight away.</p>
+      <p class="page-sub">Everything here rebuilds the plan straight away.</p>
     </header>
 
-    <div class="rule"><span>The house</span></div>
+    <div class="rule"><span>Protein timetable</span></div>
+
+    <div class="card card-flush">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2);line-height:1.45">
+        Tap any meal to say what protein goes <strong>beside</strong> it. The vegetarian food is
+        always cooked — this only adds a dish for whoever eats it.
+      </p>
+      <div class="quickfills" id="quickfills"></div>
+      <div class="pgrid" id="pgrid"></div>
+    </div>
+
+    <div class="rule"><span>Cooking style</span></div>
 
     <div class="card">
+      <div class="field">
+        <div class="field-text">
+          <h3>Health conscious</h3>
+          <p>Leans the plan towards millets, low-oil and steamed dishes. Nothing is banned — dosai still turns up.</p>
+        </div>
+        <div class="field-ctl">
+          <label class="switch">
+            <input type="checkbox" id="opt-lean">
+            <span class="track"></span><span class="sr-only">Health conscious</span>
+          </label>
+        </div>
+      </div>
 
       <div class="field">
         <div class="field-text">
-          <h3>Non-veg days</h3>
-          <p>Non-veg appears only on the days you pick — lunch at the weekend, dinner on a working day. Everything else stays vegetarian.</p>
-          <div class="picker" id="nonveg-days"></div>
+          <h3>Light dinners</h3>
+          <p>Soft, low-oil food at night. Nothing heavy or deep-fried after dark.</p>
+        </div>
+        <div class="field-ctl">
+          <label class="switch">
+            <input type="checkbox" id="opt-light" checked>
+            <span class="track"></span><span class="sr-only">Light dinners</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-text">
+          <h3>Quick weekday breakfasts</h3>
+          <p>Nothing over 20 minutes Monday to Friday.</p>
+        </div>
+        <div class="field-ctl">
+          <label class="switch">
+            <input type="checkbox" id="opt-quick" checked>
+            <span class="track"></span><span class="sr-only">Quick weekday breakfasts</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-text">
+          <h3>Sunday special</h3>
+          <p>Biryani or a full meal for Sunday lunch.</p>
+        </div>
+        <div class="field-ctl">
+          <label class="switch">
+            <input type="checkbox" id="opt-sunday" checked>
+            <span class="track"></span><span class="sr-only">Sunday special</span>
+          </label>
         </div>
       </div>
 
       <div class="field">
         <div class="field-text">
           <h3>Kids' pick</h3>
-          <p>One meal a week is the children's choice.</p>
+          <p>One meal a week from the children's end of the list.</p>
         </div>
         <div class="field-ctl">
           <select class="select" id="kids-slot">
@@ -181,49 +297,6 @@
           </select>
         </div>
       </div>
-
-      <div class="field">
-        <div class="field-text">
-          <h3>Easy on the elders at night</h3>
-          <p>Dinners stay soft, light and low-oil. Nothing heavy or deep-fried after dark.</p>
-        </div>
-        <div class="field-ctl">
-          <label class="switch">
-            <input type="checkbox" id="opt-elder" checked>
-            <span class="track"></span>
-            <span class="sr-only">Easy on the elders at night</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-text">
-          <h3>Quick weekday breakfasts</h3>
-          <p>Nothing over 20 minutes Monday to Friday. The elaborate ones wait for the weekend.</p>
-        </div>
-        <div class="field-ctl">
-          <label class="switch">
-            <input type="checkbox" id="opt-quick" checked>
-            <span class="track"></span>
-            <span class="sr-only">Quick weekday breakfasts</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-text">
-          <h3>Sunday special</h3>
-          <p>Biryani or a full banana-leaf meal for Sunday lunch.</p>
-        </div>
-        <div class="field-ctl">
-          <label class="switch">
-            <input type="checkbox" id="opt-sunday" checked>
-            <span class="track"></span>
-            <span class="sr-only">Sunday special</span>
-          </label>
-        </div>
-      </div>
-
     </div>
 
     <div class="rule"><span>Data</span></div>
@@ -232,12 +305,10 @@
       <div class="field">
         <div class="field-text">
           <h3>Start over</h3>
-          <p>Clears the saved plan and settings from this browser and builds a fresh week.</p>
+          <p>Clears the plan, the settings and your own dishes from this browser.</p>
         </div>
         <div class="field-ctl">
-          <button class="btn" id="btn-reset">
-            <svg class="icon icon-sm"><use href="#i-reset"/></svg> Reset
-          </button>
+          <button class="btn" id="btn-reset"><svg class="icon icon-sm"><use href="#i-reset"/></svg> Reset</button>
         </div>
       </div>
     </div>
@@ -245,29 +316,31 @@
     <p class="footnote">
       Everything lives in this browser. No account, no server, nothing leaves your device.
     </p>
-
   </section>
 
 </main>
 
 <nav class="nav" role="tablist" aria-label="Sections">
-  <button id="tab-today" role="tab" aria-selected="true">
-    <svg class="icon icon-lg"><use href="#i-today"/></svg>Today
-  </button>
-  <button id="tab-week" role="tab" aria-selected="false">
-    <svg class="icon icon-lg"><use href="#i-week"/></svg>Week
-  </button>
-  <button id="tab-export" role="tab" aria-selected="false">
-    <svg class="icon icon-lg"><use href="#i-export"/></svg>Share
-  </button>
-  <button id="tab-settings" role="tab" aria-selected="false">
-    <svg class="icon icon-lg"><use href="#i-settings"/></svg>Settings
-  </button>
+  <button id="tab-today" role="tab" aria-selected="true"><svg class="icon icon-lg"><use href="#i-today"/></svg>Today</button>
+  <button id="tab-week" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-week"/></svg>Week</button>
+  <button id="tab-foods" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-foods"/></svg>Foods</button>
+  <button id="tab-export" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-export"/></svg>Share</button>
+  <button id="tab-settings" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-settings"/></svg>Settings</button>
 </nav>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-grip"></div>
+    <h2 id="sheet-title"></h2>
+    <p class="hint" id="sheet-hint"></p>
+    <div id="sheet-body"></div>
+  </div>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/data.js"></script>
+<script src="js/library.js"></script>
 <script src="js/planner.js"></script>
 <script src="js/export.js"></script>
 <script src="js/app.js"></script>
