@@ -45,10 +45,12 @@ There is no special case for any of them.
 
 ## Setup
 
-First run asks two questions — what the house eats, and roughly how often — then shows a plan.
-There is a skip button.
+First run asks three things — which language, what the house eats, and roughly how often — then
+shows a plan. There is a skip button.
 
-The same two questions live in Settings under **Not sure? Answer two questions**, because a house
+First run asks the language too, before anything else, so the questions themselves are readable.
+
+The same two food questions live in Settings under **Not sure? Answer two questions**, because a house
 changes: someone starts eating egg, a month of fasting comes round, a child turns vegetarian.
 Re-running it rewrites only the protein timetable — the food list, what you have unticked and your
 own dishes are all left alone — and cancelling changes nothing.
@@ -61,7 +63,7 @@ own dishes are all left alone — and cancelling changes nothing.
 - **Foods** — your food list. Tick what your house eats; anything unticked is never planned. Add
   your own dishes, sides and protein dishes. Separate lists for breakfast, lunch, dinner, sides and
   protein.
-- **Settings** — the protein timetable, plus three switches.
+- **Settings** — households, language, the protein timetable, plus three switches.
 
 Sharing is not a screen. The share button sits in the header of Today and Week, next to the one that
 rerolls them, and opens a sheet over whatever you were looking at. From Today it exports that one
@@ -84,8 +86,10 @@ Being straight about what that does and does not buy:
   clear the data to reclaim space. Chrome decides based on how much you use the site, and installing
   it to the home screen makes it a yes.
 - **Backup is the only copy that outlives the browser.** Settings → Backup writes the whole database
-  to one file. Restore reads it back. Clearing site data, switching phone, a lost device — that file
-  is the answer to all three, and it is the same file you would hand to someone else in the house.
+  — every household in it — to one file. Restore reads it back. Clearing site data, switching phone,
+  a lost device: that file is the answer to all three. Restore only accepts a file this app wrote;
+  another SQLite database would import cleanly and then read as an empty house, which looks exactly
+  like losing everything, so the tables are checked before anything is replaced.
 - **Private windows are wiped, by design.** Chrome throws away everything an incognito session
   stored the moment its last window closes, and no web app can change that. Inside the session the
   database is real — reload, open another tab, it is all still there. Settings says which of these
@@ -99,11 +103,15 @@ SELECT name, meal, json_extract(body, '$.main') AS main FROM plan ORDER BY day;
 
 | Table | What is in it |
 |---|---|
+| `house` | The households |
 | `setting` | Health conscious, light dinners, quick breakfasts |
 | `protein` | The 7 × 3 grid, one row per meal |
 | `off_item` | Everything the house has unticked |
 | `custom_item` | Dishes, sides and protein dishes the house added |
 | `plan` | The current week, one row per meal, with what is kept |
+
+Every table but `house` carries a `house` column, so the same query answers "what is this household
+eating" for any of them.
 
 The database is stored as bytes in IndexedDB and loaded into the engine at startup. The obvious
 alternative is OPFS, where SQLite writes the file directly and incrementally — but that VFS needs
@@ -157,8 +165,24 @@ To ship a dish for everyone, add it to `js/data.js` instead:
 
 ## Language
 
-English only. Dish records still carry a `tamil` name — unused by the UI, but it is the seed for a
-language switch rather than something to retype later.
+English and Tamil, both complete — interface, dish names, the exported timetable, the lot. The first
+run asks which, defaulting to whatever the phone is already set to, and Settings can change it any
+time. Switching relabels the plan you already have rather than regenerating it: a slot stores dish
+ids, so the names are resolved at the moment they are drawn.
+
+Settings also lists हिन्दी, తెలుగు, ಕನ್ನಡ and മലയാളം, marked *soon* and not selectable. They are shown
+so a house can see what is coming instead of wondering. Adding one is a translation job, not a code
+job — copy the `en` block in `js/i18n.js`, translate the values, flip `ready` to true. Food words
+live with the food, as a `tamil` field beside `name` in `js/data.js`.
+
+## Households
+
+One app, several houses. House 1 and House 2 share nothing but the app itself: their own food list,
+their own protein timetable, their own cooking-style switches, their own week. Settings → Households
+adds, renames, removes and switches.
+
+It stays out of the way until you want it. A single household sees one row it never has to think
+about; the list only becomes a thing to manage once there are two.
 
 ## Layout
 
@@ -166,7 +190,8 @@ language switch rather than something to retype later.
 |---|---|
 | `index.html` | Four screens, the first-run setup, the sheet and the icon sprite |
 | `css/styles.css` | All styling, dark and light |
-| `js/db.js` | The database, every fallback under it, backup and restore |
+| `js/db.js` | The database, households, every fallback under it, backup and restore |
+| `js/i18n.js` | Every interface string, in each language |
 | `js/data.js` | **The suggested food list** — mains, sides, protein dishes |
 | `js/library.js` | What this household actually eats: what is switched off, what they added |
 | `js/planner.js` | The generator |

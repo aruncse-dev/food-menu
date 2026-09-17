@@ -7,6 +7,11 @@
    Reset — or clearing this site's data from Chrome's own settings —
    empties it.
 
+   Everything is per household. One database can hold several houses
+   that share nothing but the app itself: their own food lists, their
+   own protein timetables, their own week. Every table therefore
+   carries a `house` column and meta remembers which one is open.
+
    Worth being straight about one thing: moving off localStorage is
    not by itself what makes the data durable. Chrome keeps every
    storage API for an origin in one bucket and evicts the bucket whole,
@@ -50,7 +55,8 @@ var Store = (function () {
   var IDB_NAME   = 'food-menu';
   var IDB_STORE  = 'kv';
   var IDB_KEY    = 'database';
-  var SCHEMA     = 1;
+  var SCHEMA     = 2;              /* 1 had no households           */
+  var FIRST_HOUSE = 'h-home';
 
   var FLUSH_MS = 120;
 
@@ -156,19 +162,50 @@ var Store = (function () {
 
   var DDL = [
     'CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
-    'CREATE TABLE IF NOT EXISTS setting (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
-    'CREATE TABLE IF NOT EXISTS protein (day TEXT NOT NULL, meal TEXT NOT NULL,' +
-      ' kind TEXT NOT NULL, PRIMARY KEY (day, meal))',
-    'CREATE TABLE IF NOT EXISTS off_item (kind TEXT NOT NULL, item TEXT NOT NULL,' +
-      ' PRIMARY KEY (kind, item))',
-    'CREATE TABLE IF NOT EXISTS custom_item (kind TEXT NOT NULL, item TEXT NOT NULL,' +
-      ' body TEXT NOT NULL, PRIMARY KEY (kind, item))',
-    'CREATE TABLE IF NOT EXISTS plan (day INTEGER NOT NULL, name TEXT NOT NULL,' +
-      ' meal TEXT NOT NULL, body TEXT, locked INTEGER NOT NULL DEFAULT 0,' +
-      ' PRIMARY KEY (day, meal))'
+    'CREATE TABLE IF NOT EXISTS house (id TEXT PRIMARY KEY, name TEXT NOT NULL,' +
+      ' ord INTEGER NOT NULL DEFAULT 0)',
+    'CREATE TABLE IF NOT EXISTS setting (house TEXT NOT NULL, key TEXT NOT NULL,' +
+      ' value TEXT NOT NULL, PRIMARY KEY (house, key))',
+    'CREATE TABLE IF NOT EXISTS protein (house TEXT NOT NULL, day TEXT NOT NULL,' +
+      ' meal TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (house, day, meal))',
+    'CREATE TABLE IF NOT EXISTS off_item (house TEXT NOT NULL, kind TEXT NOT NULL,' +
+      ' item TEXT NOT NULL, PRIMARY KEY (house, kind, item))',
+    'CREATE TABLE IF NOT EXISTS custom_item (house TEXT NOT NULL, kind TEXT NOT NULL,' +
+      ' item TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY (house, kind, item))',
+    'CREATE TABLE IF NOT EXISTS plan (house TEXT NOT NULL, day INTEGER NOT NULL,' +
+      ' name TEXT NOT NULL, meal TEXT NOT NULL, body TEXT,' +
+      ' locked INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (house, day, meal))'
   ];
 
+  var TABLES = ['plan', 'custom_item', 'off_item', 'protein', 'setting', 'house', 'meta'];
+
+  function hasColumn(table, column) {
+    var found = false;
+    try {
+      rows('PRAGMA table_info(' + table + ')').forEach(function (r) {
+        if (r.name === column) { found = true; }
+      });
+    } catch (e) { return false; }
+    return found;
+  }
+
+  function tableExists(table) {
+    try {
+      return !!db.selectValue(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", [table]);
+    } catch (e) { return false; }
+  }
+
   function migrate() {
+    /* Schema 1 held a single household, so none of its tables have a
+       house column. Read that one house out, rebuild, and put it back
+       under a name — an upgrade nobody should notice. */
+    var carried = null;
+    if (tableExists('setting') && !hasColumn('setting', 'house')) {
+      carried = readSliceV1();
+      TABLES.forEach(function (t) { db.exec('DROP TABLE IF EXISTS ' + t); });
+    }
+
     db.exec('BEGIN');
     try {
       DDL.forEach(function (sql) { db.exec(sql); });
@@ -181,6 +218,51 @@ var Store = (function () {
       db.exec('ROLLBACK');
       throw e;
     }
+
+    if (carried) {
+      writeAll({
+        houses: [{ id: FIRST_HOUSE, name: '' }],
+        active: FIRST_HOUSE,
+        byHouse: (function () { var m = {}; m[FIRST_HOUSE] = carried; return m; })()
+      });
+    }
+  }
+
+  /* The schema-1 reader, kept only so an existing database can be
+     carried forward. Nothing else calls it. */
+  function readSliceV1() {
+    var slice = { settings: { protein: {} }, library: emptyLibrary(), week: null, locked: {} };
+    try {
+      rows('SELECT key, value FROM setting').forEach(function (r) {
+        try { slice.settings[r.key] = JSON.parse(r.value); } catch (e) { /* skip */ }
+      });
+      rows('SELECT day, meal, kind FROM protein').forEach(function (r) {
+        if (!slice.settings.protein[r.day]) { slice.settings.protein[r.day] = {}; }
+        slice.settings.protein[r.day][r.meal] = r.kind;
+      });
+      rows('SELECT kind, item FROM off_item').forEach(function (r) {
+        var bucket = slice.library['off' + labelFor(r.kind)];
+        if (bucket) { bucket[r.item] = true; }
+      });
+      rows('SELECT kind, item, body FROM custom_item').forEach(function (r) {
+        var bucket = slice.library['custom' + labelFor(r.kind)];
+        if (!bucket) { return; }
+        try { bucket.push(JSON.parse(r.body)); } catch (e) { /* skip */ }
+      });
+      var planRows = rows('SELECT day, name, meal, body, locked FROM plan');
+      if (planRows.length) {
+        slice.week = [0, 1, 2, 3, 4, 5, 6].map(function () { return {}; });
+        planRows.forEach(function (r) {
+          if (r.day < 0 || r.day > 6 || MEALS.indexOf(r.meal) === -1) { return; }
+          slice.week[r.day].day = r.name;
+          var slot = null;
+          if (r.body) { try { slot = JSON.parse(r.body); } catch (e) { slot = null; } }
+          slice.week[r.day][r.meal] = slot;
+          if (r.locked) { slice.locked[r.day + '-' + r.meal] = true; }
+        });
+      }
+    } catch (e) { return null; }
+    return slice;
   }
 
   function rows(sql) {
@@ -205,51 +287,71 @@ var Store = (function () {
     };
   }
 
-  function readSql() {
-    var settings = { protein: {} };
+  function emptySlice() {
+    return { settings: { protein: {} }, library: emptyLibrary(), week: null, locked: {} };
+  }
 
-    rows('SELECT key, value FROM setting').forEach(function (r) {
-      try { settings[r.key] = JSON.parse(r.value); } catch (e) { /* skip a bad row */ }
+  function readAll() {
+    var houses = rows('SELECT id, name FROM house ORDER BY ord, name')
+      .map(function (r) { return { id: r.id, name: r.name }; });
+
+    var byHouse = {};
+    houses.forEach(function (h) { byHouse[h.id] = emptySlice(); });
+
+    function slice(id) { return byHouse[id]; }
+
+    rows('SELECT house, key, value FROM setting').forEach(function (r) {
+      if (!slice(r.house)) { return; }
+      try { slice(r.house).settings[r.key] = JSON.parse(r.value); } catch (e) { /* skip */ }
     });
 
-    rows('SELECT day, meal, kind FROM protein').forEach(function (r) {
-      if (!settings.protein[r.day]) { settings.protein[r.day] = {}; }
-      settings.protein[r.day][r.meal] = r.kind;
+    rows('SELECT house, day, meal, kind FROM protein').forEach(function (r) {
+      if (!slice(r.house)) { return; }
+      var grid = slice(r.house).settings.protein;
+      if (!grid[r.day]) { grid[r.day] = {}; }
+      grid[r.day][r.meal] = r.kind;
     });
 
-    var library = emptyLibrary();
-
-    rows('SELECT kind, item FROM off_item').forEach(function (r) {
-      var bucket = library['off' + labelFor(r.kind)];
+    rows('SELECT house, kind, item FROM off_item').forEach(function (r) {
+      if (!slice(r.house)) { return; }
+      var bucket = slice(r.house).library['off' + labelFor(r.kind)];
       if (bucket) { bucket[r.item] = true; }
     });
 
-    rows('SELECT kind, item, body FROM custom_item').forEach(function (r) {
-      var bucket = library['custom' + labelFor(r.kind)];
+    rows('SELECT house, kind, item, body FROM custom_item').forEach(function (r) {
+      if (!slice(r.house)) { return; }
+      var bucket = slice(r.house).library['custom' + labelFor(r.kind)];
       if (!bucket) { return; }
-      try { bucket.push(JSON.parse(r.body)); } catch (e) { /* skip a bad row */ }
+      try { bucket.push(JSON.parse(r.body)); } catch (e) { /* skip */ }
     });
 
-    var week = null;
-    var locked = {};
-    var planRows = rows('SELECT day, name, meal, body, locked FROM plan');
+    rows('SELECT house, day, name, meal, body, locked FROM plan').forEach(function (r) {
+      var target = slice(r.house);
+      if (!target || r.day < 0 || r.day > 6 || MEALS.indexOf(r.meal) === -1) { return; }
+      if (!target.week) {
+        target.week = [0, 1, 2, 3, 4, 5, 6].map(function () { return {}; });
+      }
+      target.week[r.day].day = r.name;
+      var slot = null;
+      if (r.body) { try { slot = JSON.parse(r.body); } catch (e) { slot = null; } }
+      target.week[r.day][r.meal] = slot;
+      if (r.locked) { target.locked[r.day + '-' + r.meal] = true; }
+    });
 
-    if (planRows.length) {
-      week = [0, 1, 2, 3, 4, 5, 6].map(function () { return {}; });
-      planRows.forEach(function (r) {
-        if (r.day < 0 || r.day > 6) { return; }
-        if (MEALS.indexOf(r.meal) === -1) { return; }
+    var active = null;
+    try { active = db.selectValue('SELECT value FROM meta WHERE key = ?', ['active']); }
+    catch (e) { active = null; }
+    if (!byHouse[active]) { active = houses.length ? houses[0].id : null; }
 
-        week[r.day].day = r.name;
+    return { houses: houses, active: active, byHouse: byHouse, prefs: readPrefs() };
+  }
 
-        var slot = null;
-        if (r.body) { try { slot = JSON.parse(r.body); } catch (e) { slot = null; } }
-        week[r.day][r.meal] = slot;
-        if (r.locked) { locked[r.day + '-' + r.meal] = true; }
-      });
-    }
-
-    return { settings: settings, library: library, week: week, locked: locked };
+  /* Language is a property of whoever is holding the phone, not of a
+     household, so it sits beside the houses rather than inside one. */
+  function readPrefs() {
+    try {
+      return JSON.parse(db.selectValue('SELECT value FROM meta WHERE key = ?', ['prefs']) || '{}');
+    } catch (e) { return {}; }
   }
 
   function labelFor(kind) {
@@ -259,70 +361,35 @@ var Store = (function () {
     return '';
   }
 
-  /* The whole state is a few hundred rows at most, so every save
+  /* The whole state is a few hundred rows per house, so every save
      rewrites all of it inside one transaction. A diff would be faster
      in a way nobody could measure and wrong in ways that are hard to
      find. */
-  function writeSql(next) {
-    var settings = next.settings || {};
-    var library = next.library || emptyLibrary();
-
+  function writeAll(next) {
     db.exec('BEGIN');
     try {
+      db.exec('DELETE FROM house');
       db.exec('DELETE FROM setting');
       db.exec('DELETE FROM protein');
       db.exec('DELETE FROM off_item');
       db.exec('DELETE FROM custom_item');
       db.exec('DELETE FROM plan');
 
-      Object.keys(settings).forEach(function (key) {
-        if (key === 'protein') { return; }
+      (next.houses || []).forEach(function (house, order) {
         db.exec({
-          sql: 'INSERT INTO setting (key, value) VALUES (?, ?)',
-          bind: [key, JSON.stringify(settings[key])]
+          sql: 'INSERT INTO house (id, name, ord) VALUES (?, ?, ?)',
+          bind: [house.id, house.name || '', order]
         });
+        writeSlice(house.id, (next.byHouse || {})[house.id] || emptySlice());
       });
 
-      Object.keys(settings.protein || {}).forEach(function (day) {
-        Object.keys(settings.protein[day]).forEach(function (meal) {
-          db.exec({
-            sql: 'INSERT INTO protein (day, meal, kind) VALUES (?, ?, ?)',
-            bind: [day, meal, settings.protein[day][meal]]
-          });
-        });
+      db.exec({
+        sql: 'INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)',
+        bind: ['active', next.active || '']
       });
-
-      KINDS.forEach(function (pair) {
-        var kind = pair[0];
-        var off = library['off' + pair[1]] || {};
-        Object.keys(off).forEach(function (item) {
-          if (!off[item]) { return; }
-          db.exec({
-            sql: 'INSERT OR IGNORE INTO off_item (kind, item) VALUES (?, ?)',
-            bind: [kind, item]
-          });
-        });
-
-        (library['custom' + pair[1]] || []).forEach(function (dish) {
-          if (!dish || !dish.id) { return; }
-          db.exec({
-            sql: 'INSERT OR REPLACE INTO custom_item (kind, item, body) VALUES (?, ?, ?)',
-            bind: [kind, dish.id, JSON.stringify(dish)]
-          });
-        });
-      });
-
-      (next.week || []).forEach(function (row, index) {
-        if (!row) { return; }
-        MEALS.forEach(function (meal) {
-          var slot = row[meal];
-          db.exec({
-            sql: 'INSERT OR REPLACE INTO plan (day, name, meal, body, locked)' +
-                 ' VALUES (?, ?, ?, ?, ?)',
-            bind: [index, row.day || '', meal, slot ? JSON.stringify(slot) : null,
-                   (next.locked || {})[index + '-' + meal] ? 1 : 0]
-          });
-        });
+      db.exec({
+        sql: 'INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)',
+        bind: ['prefs', JSON.stringify(next.prefs || {})]
       });
 
       db.exec('COMMIT');
@@ -330,6 +397,62 @@ var Store = (function () {
       db.exec('ROLLBACK');
       throw e;
     }
+  }
+
+  function writeSlice(house, slice) {
+    var settings = slice.settings || {};
+    var library = slice.library || emptyLibrary();
+
+    Object.keys(settings).forEach(function (key) {
+      if (key === 'protein') { return; }
+      db.exec({
+        sql: 'INSERT INTO setting (house, key, value) VALUES (?, ?, ?)',
+        bind: [house, key, JSON.stringify(settings[key])]
+      });
+    });
+
+    Object.keys(settings.protein || {}).forEach(function (day) {
+      Object.keys(settings.protein[day]).forEach(function (meal) {
+        db.exec({
+          sql: 'INSERT INTO protein (house, day, meal, kind) VALUES (?, ?, ?, ?)',
+          bind: [house, day, meal, settings.protein[day][meal]]
+        });
+      });
+    });
+
+    KINDS.forEach(function (pair) {
+      var kind = pair[0];
+      var off = library['off' + pair[1]] || {};
+      Object.keys(off).forEach(function (item) {
+        if (!off[item]) { return; }
+        db.exec({
+          sql: 'INSERT OR IGNORE INTO off_item (house, kind, item) VALUES (?, ?, ?)',
+          bind: [house, kind, item]
+        });
+      });
+
+      (library['custom' + pair[1]] || []).forEach(function (dish) {
+        if (!dish || !dish.id) { return; }
+        db.exec({
+          sql: 'INSERT OR REPLACE INTO custom_item (house, kind, item, body)' +
+               ' VALUES (?, ?, ?, ?)',
+          bind: [house, kind, dish.id, JSON.stringify(dish)]
+        });
+      });
+    });
+
+    (slice.week || []).forEach(function (row, index) {
+      if (!row) { return; }
+      MEALS.forEach(function (meal) {
+        var slot = row[meal];
+        db.exec({
+          sql: 'INSERT OR REPLACE INTO plan (house, day, name, meal, body, locked)' +
+               ' VALUES (?, ?, ?, ?, ?, ?)',
+          bind: [house, index, row.day || '', meal, slot ? JSON.stringify(slot) : null,
+                 (slice.locked || {})[index + '-' + meal] ? 1 : 0]
+        });
+      });
+    });
   }
 
   /* ---------------- getting a database open ---------------- */
@@ -449,23 +572,55 @@ var Store = (function () {
 
   /* A freshly created database is not the same as a used one. Every
      read hands back the same shape, so emptiness has to be judged on
-     the contents rather than on whether a snapshot came back at all —
+     the contents rather than on whether something came back at all —
      otherwise a brand new database looks like a returning household
      and the old localStorage state never gets carried across. */
-  function hasContent(snap) {
-    if (!snap) { return false; }
-    if (snap.week) { return true; }
+  function sliceHasContent(slice) {
+    if (!slice) { return false; }
+    if (slice.week) { return true; }
 
-    var settings = snap.settings || {};
+    var settings = slice.settings || {};
     var named = Object.keys(settings).filter(function (k) { return k !== 'protein'; });
     if (named.length) { return true; }
     if (Object.keys(settings.protein || {}).length) { return true; }
 
-    var library = snap.library || {};
+    var library = slice.library || emptyLibrary();
     return KINDS.some(function (pair) {
       return Object.keys(library['off' + pair[1]] || {}).length > 0 ||
              (library['custom' + pair[1]] || []).length > 0;
     });
+  }
+
+  function hasContent(snap) {
+    if (!snap || !snap.houses || !snap.houses.length) { return false; }
+    return snap.houses.some(function (h) {
+      return sliceHasContent((snap.byHouse || {})[h.id]);
+    });
+  }
+
+  function activeSlice() {
+    if (!snapshot || !snapshot.active) { return null; }
+    return (snapshot.byHouse || {})[snapshot.active] || null;
+  }
+
+  function oneHouse(slice, name) {
+    var byHouse = {};
+    byHouse[FIRST_HOUSE] = slice || emptySlice();
+    return {
+      houses: [{ id: FIRST_HOUSE, name: name || '' }],
+      active: FIRST_HOUSE,
+      byHouse: byHouse,
+      prefs: (snapshot && snapshot.prefs) || {}
+    };
+  }
+
+  function pref(key) { return snapshot && snapshot.prefs ? snapshot.prefs[key] : undefined; }
+
+  function setPref(key, value) {
+    if (!snapshot) { snapshot = oneHouse(null); }
+    if (!snapshot.prefs) { snapshot.prefs = {}; }
+    snapshot.prefs[key] = value;
+    schedule();
   }
 
   function init() {
@@ -475,19 +630,19 @@ var Store = (function () {
                     function () { return tryJson('localstorage'); }])
       .then(function () {
         if (engine === 'sql') { migrate(); }
-        return engine === 'sql' ? readSql() : readJsonSink();
+        return engine === 'sql' ? readAll() : readJsonSink();
       })
       .then(function (found) {
         snapshot = found;
 
-        /* Anyone already using the app has their week in the old
-           localStorage blob. Carry it across once, silently, then
-           retire the key so there is only one source of truth. */
         if (!hasContent(snapshot)) {
+          /* Anyone already using the app has their week in the old
+             localStorage blob. Carry it across once, silently, then
+             retire the key so there is only one source of truth. */
           var legacy = legacySnapshot();
+          snapshot = oneHouse(legacy);
           if (legacy) {
-            snapshot = legacy;
-            return write(legacy).then(function () { lsDel(LEGACY_KEY); });
+            return write(snapshot).then(function () { lsDel(LEGACY_KEY); });
           }
         } else {
           lsDel(LEGACY_KEY);
@@ -495,17 +650,18 @@ var Store = (function () {
       })
       .then(requestPersistence)
       .then(function (granted) { persistent = !!granted; })
-      .then(function () { return { loaded: hasContent(snapshot), snapshot: snapshot }; })
+      .then(function () { return { loaded: hasContent(snapshot) }; })
       .catch(function () {
         engine = 'json';
         sink = 'none';
-        return { loaded: false, snapshot: null };
+        snapshot = oneHouse(null);
+        return { loaded: false };
       });
   }
 
   function write(next) {
     if (engine === 'sql') {
-      try { writeSql(next); } catch (e) { return Promise.resolve(); }
+      try { writeAll(next); } catch (e) { return Promise.resolve(); }
       var bytes = exportBytes();
       if (!bytes) { return Promise.resolve(); }
       if (sink === 'indexeddb') { return idbPut(bytes).catch(function () {}); }
@@ -518,13 +674,19 @@ var Store = (function () {
     return Promise.resolve();
   }
 
-  function save(next) {
-    snapshot = next;
+  function schedule() {
     if (flushTimer) { clearTimeout(flushTimer); }
     flushTimer = setTimeout(function () {
       flushTimer = null;
-      flushing = write(next);
+      flushing = write(snapshot);
     }, FLUSH_MS);
+  }
+
+  /* app.js only ever knows about the house that is open. */
+  function save(slice) {
+    if (!snapshot) { snapshot = oneHouse(slice); }
+    else { snapshot.byHouse[snapshot.active] = slice; }
+    schedule();
   }
 
   function flush() {
@@ -547,11 +709,65 @@ var Store = (function () {
           migrate();
         } catch (e) { /* the clears below still stand */ }
       }
-      snapshot = null;
+      snapshot = oneHouse(null);
       lsDel(LEGACY_KEY);
       lsDel(LS_KEY);
       return idbClear().catch(function () {});
     });
+  }
+
+  /* ---------------- households ---------------- */
+
+  function houses() {
+    if (!snapshot) { return []; }
+    return snapshot.houses.map(function (h) {
+      return { id: h.id, name: h.name, active: h.id === snapshot.active };
+    });
+  }
+
+  function activeHouse() {
+    if (!snapshot) { return null; }
+    for (var i = 0; i < snapshot.houses.length; i++) {
+      if (snapshot.houses[i].id === snapshot.active) { return snapshot.houses[i]; }
+    }
+    return null;
+  }
+
+  function newId() {
+    return 'h-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  }
+
+  function addHouse(name) {
+    if (!snapshot) { snapshot = oneHouse(null); }
+    var id = newId();
+    snapshot.houses.push({ id: id, name: name || '' });
+    snapshot.byHouse[id] = emptySlice();
+    snapshot.active = id;
+    schedule();
+    return id;
+  }
+
+  function renameHouse(id, name) {
+    if (!snapshot) { return; }
+    snapshot.houses.forEach(function (h) { if (h.id === id) { h.name = name || ''; } });
+    schedule();
+  }
+
+  /* The last house cannot go: there has to be somewhere to cook. */
+  function removeHouse(id) {
+    if (!snapshot || snapshot.houses.length < 2) { return false; }
+    snapshot.houses = snapshot.houses.filter(function (h) { return h.id !== id; });
+    delete snapshot.byHouse[id];
+    if (snapshot.active === id) { snapshot.active = snapshot.houses[0].id; }
+    schedule();
+    return true;
+  }
+
+  function switchHouse(id) {
+    if (!snapshot || !snapshot.byHouse[id]) { return false; }
+    snapshot.active = id;
+    schedule();
+    return true;
   }
 
   /* ---------------- backup ---------------- */
@@ -573,18 +789,48 @@ var Store = (function () {
     });
   }
 
+  /* Restore only accepts a file this app wrote. A SQLite database from
+     somewhere else would import cleanly and then read as an empty
+     house, which looks exactly like losing everything — so the tables
+     are checked before anything is replaced. */
+  function isOurDatabase() {
+    if (!tableExists('meta') || !tableExists('house') || !tableExists('plan')) { return false; }
+    try {
+      return !!db.selectValue('SELECT value FROM meta WHERE key = ?', ['schema']);
+    } catch (e) { return false; }
+  }
+
+  function isOurJson(parsed) {
+    if (!parsed || typeof parsed !== 'object') { return false; }
+    if (Array.isArray(parsed.houses) && parsed.byHouse) { return true; }
+    /* a schema-1 export, before households */
+    return !!(parsed.library || parsed.settings || parsed.week);
+  }
+
   function restore(buffer) {
     var bytes = new Uint8Array(buffer);
 
     if (looksLikeDatabase(bytes)) {
       if (engine !== 'sql') { return Promise.resolve(null); }
+
+      var previous = db;
+      var candidate = null;
       try {
-        db.close();
-        db = new sqlite3.oo1.DB(':memory:', 'c');
+        candidate = new sqlite3.oo1.DB(':memory:', 'c');
+        db = candidate;
         importBytes(bytes);
+        if (!isOurDatabase()) { throw new Error('not ours'); }
         migrate();
-        snapshot = readSql();
+        snapshot = readAll();
+        if (!snapshot.houses.length) { throw new Error('no households'); }
+        previous.close();
       } catch (e) {
+        /* Put the old database back rather than leaving the app on a
+           file it could not read. */
+        db = previous;
+        if (candidate && candidate !== previous) {
+          try { candidate.close(); } catch (e2) { /* already gone */ }
+        }
         return Promise.resolve(null);
       }
       return write(snapshot).then(function () { return snapshot; });
@@ -594,13 +840,28 @@ var Store = (function () {
        not load SQLite at all. */
     try {
       var parsed = JSON.parse(new TextDecoder().decode(bytes));
-      if (!parsed || typeof parsed !== 'object') { return Promise.resolve(null); }
-      snapshot = {
-        settings: parsed.settings || {},
-        library: Object.assign(emptyLibrary(), parsed.library || {}),
-        week: parsed.week || null,
-        locked: parsed.locked || {}
-      };
+      if (!isOurJson(parsed)) { return Promise.resolve(null); }
+
+      if (Array.isArray(parsed.houses)) {
+        snapshot = {
+          houses: parsed.houses.map(function (h) {
+            return { id: h.id, name: h.name || '' };
+          }),
+          active: parsed.active,
+          byHouse: parsed.byHouse || {}
+        };
+        if (!snapshot.byHouse[snapshot.active]) {
+          snapshot.active = snapshot.houses.length ? snapshot.houses[0].id : null;
+        }
+      } else {
+        snapshot = oneHouse({
+          settings: parsed.settings || {},
+          library: Object.assign(emptyLibrary(), parsed.library || {}),
+          week: parsed.week || null,
+          locked: parsed.locked || {}
+        });
+      }
+      if (!snapshot.houses.length) { return Promise.resolve(null); }
     } catch (e) {
       return Promise.resolve(null);
     }
@@ -609,19 +870,15 @@ var Store = (function () {
 
   /* ---------------- what to tell the user ---------------- */
 
-  var SINK_LABEL = {
-    indexeddb: 'SQLite database in this browser',
-    localstorage: 'This browser’s local storage',
-    none: 'This tab only'
-  };
-
+  /* A key rather than a sentence: what this says has to be sayable in
+     whatever language the house chose, and js/i18n.js owns that. */
   function status() {
-    var label = SINK_LABEL[sink] || SINK_LABEL.none;
-    if (engine === 'json' && sink !== 'none') { label = SINK_LABEL.localstorage; }
+    var key = 'storage.tab';
+    if (sink !== 'none') { key = engine === 'sql' ? 'storage.sqlite' : 'storage.local'; }
     return {
       engine: engine,
       sink: sink,
-      label: label,
+      labelKey: key,
       persistent: persistent,
       durable: sink !== 'none'
     };
@@ -636,8 +893,16 @@ var Store = (function () {
 
   return {
     init: init,
-    read: function () { return snapshot; },
+    read: activeSlice,
     save: save,
+    houses: houses,
+    activeHouse: activeHouse,
+    addHouse: addHouse,
+    renameHouse: renameHouse,
+    removeHouse: removeHouse,
+    switchHouse: switchHouse,
+    pref: pref,
+    setPref: setPref,
     flush: flush,
     reset: reset,
     backup: backup,

@@ -30,26 +30,31 @@ var DAY_FULL = {
   Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday'
 };
 
-/* Side categories, in the order they should read on a plate. */
+/* Side categories, in the order they should read on a plate.
+
+   Food words carry their own Tamil here rather than living in the
+   translation catalogue, because they are content — the same reason a
+   dish does. Everything that is interface rather than food is in
+   js/i18n.js. Both are read through I18N.name(). */
 var CATEGORIES = [
-  { id: 'sambar',        name: 'Sambar & rasam' },
-  { id: 'kuzhambu',      name: 'Kuzhambu' },
-  { id: 'chutney',       name: 'Chutney' },
-  { id: 'podi',          name: 'Podi & thogayal' },
-  { id: 'gravy',         name: 'Gravy & kurma' },
-  { id: 'poriyal',       name: 'Poriyal' },
-  { id: 'kootu',         name: 'Kootu' },
-  { id: 'accompaniment', name: 'Curd, pickle, appalam' },
-  { id: 'extra',         name: 'Extras' }
+  { id: 'sambar',        name: 'Sambar & rasam',        tamil: 'சாம்பார் & ரசம்' },
+  { id: 'kuzhambu',      name: 'Kuzhambu',              tamil: 'குழம்பு' },
+  { id: 'chutney',       name: 'Chutney',               tamil: 'சட்னி' },
+  { id: 'podi',          name: 'Podi & thogayal',       tamil: 'பொடி & தொகையல்' },
+  { id: 'gravy',         name: 'Gravy & kurma',         tamil: 'கிரேவி & குருமா' },
+  { id: 'poriyal',       name: 'Poriyal',               tamil: 'பொரியல்' },
+  { id: 'kootu',         name: 'Kootu',                 tamil: 'கூட்டு' },
+  { id: 'accompaniment', name: 'Curd, pickle, appalam', tamil: 'தயிர், ஊறுகாய், அப்பளம்' },
+  { id: 'extra',         name: 'Extras',                tamil: 'கூடுதல்' }
 ];
 
 var ADDON_KINDS = [
-  { id: 'veg',    name: 'Veg only', short: 'Veg' },
-  { id: 'egg',    name: 'Egg',      short: 'Egg' },
-  { id: 'chicken', name: 'Chicken', short: 'Chicken' },
-  { id: 'fish',   name: 'Fish',     short: 'Fish' },
-  { id: 'mutton', name: 'Mutton',   short: 'Mutton' },
-  { id: 'prawn',  name: 'Prawn',    short: 'Prawn' }
+  { id: 'veg',     name: 'Veg only', short: 'Veg',     tamil: 'சைவம் மட்டும்', tamilShort: 'சைவம்' },
+  { id: 'egg',     name: 'Egg',      short: 'Egg',     tamil: 'முட்டை',        tamilShort: 'முட்டை' },
+  { id: 'chicken', name: 'Chicken',  short: 'Chicken', tamil: 'சிக்கன்',       tamilShort: 'சிக்கன்' },
+  { id: 'fish',    name: 'Fish',     short: 'Fish',    tamil: 'மீன்',          tamilShort: 'மீன்' },
+  { id: 'mutton',  name: 'Mutton',   short: 'Mutton',  tamil: 'மட்டன்',        tamilShort: 'மட்டன்' },
+  { id: 'prawn',   name: 'Prawn',    short: 'Prawn',   tamil: 'இறால்',         tamilShort: 'இறால்' }
 ];
 
 var HEALTH_LABEL = {
@@ -292,94 +297,94 @@ var MAINS = [
 /* ---------------- sides ---------------- */
 
 var SIDES = [
-  { id: 's-sambar',      name: 'Sambar',            cat: 'sambar',        health: ['fibre'] },
-  { id: 's-rasam',       name: 'Rasam',             cat: 'sambar',        health: ['low-oil'] },
-  { id: 's-pepper-rasam', name: 'Pepper rasam',     cat: 'sambar',        health: ['low-oil'] },
+  { id: 's-sambar',      name: 'Sambar', tamil: 'சாம்பார்',            cat: 'sambar',        health: ['fibre'] },
+  { id: 's-rasam',       name: 'Rasam', tamil: 'ரசம்',             cat: 'sambar',        health: ['low-oil'] },
+  { id: 's-pepper-rasam', name: 'Pepper rasam', tamil: 'மிளகு ரசம்',     cat: 'sambar',        health: ['low-oil'] },
 
-  { id: 's-vathal-k',    name: 'Vathal kuzhambu',   cat: 'kuzhambu',      health: [] },
-  { id: 's-kara-k',      name: 'Kara kuzhambu',     cat: 'kuzhambu',      health: [] },
-  { id: 's-more-k',      name: 'More kuzhambu',     cat: 'kuzhambu',      health: ['low-oil'] },
+  { id: 's-vathal-k',    name: 'Vathal kuzhambu', tamil: 'வத்தல் குழம்பு',   cat: 'kuzhambu',      health: [] },
+  { id: 's-kara-k',      name: 'Kara kuzhambu', tamil: 'கார குழம்பு',     cat: 'kuzhambu',      health: [] },
+  { id: 's-more-k',      name: 'More kuzhambu', tamil: 'மோர் குழம்பு',     cat: 'kuzhambu',      health: ['low-oil'] },
 
-  { id: 's-coconut-ch',  name: 'Coconut chutney',   cat: 'chutney',       health: [] },
-  { id: 's-tomato-ch',   name: 'Tomato chutney',    cat: 'chutney',       health: ['low-oil'] },
-  { id: 's-mint-ch',     name: 'Mint chutney',      cat: 'chutney',       health: ['low-oil'] },
-  { id: 's-coriander-ch', name: 'Coriander chutney', cat: 'chutney',      health: ['low-oil'] },
-  { id: 's-onion-ch',    name: 'Onion chutney',     cat: 'chutney',       health: [] },
-  { id: 's-peanut-ch',   name: 'Peanut chutney',    cat: 'chutney',       health: ['protein'] },
-  { id: 's-garlic-ch',   name: 'Garlic chutney',    cat: 'chutney',       health: ['low-oil'] },
+  { id: 's-coconut-ch',  name: 'Coconut chutney', tamil: 'தேங்காய் சட்னி',   cat: 'chutney',       health: [] },
+  { id: 's-tomato-ch',   name: 'Tomato chutney', tamil: 'தக்காளி சட்னி',    cat: 'chutney',       health: ['low-oil'] },
+  { id: 's-mint-ch',     name: 'Mint chutney', tamil: 'புதினா சட்னி',      cat: 'chutney',       health: ['low-oil'] },
+  { id: 's-coriander-ch', name: 'Coriander chutney', tamil: 'கொத்தமல்லி சட்னி', cat: 'chutney',      health: ['low-oil'] },
+  { id: 's-onion-ch',    name: 'Onion chutney', tamil: 'வெங்காய சட்னி',     cat: 'chutney',       health: [] },
+  { id: 's-peanut-ch',   name: 'Peanut chutney', tamil: 'வேர்க்கடலை சட்னி',    cat: 'chutney',       health: ['protein'] },
+  { id: 's-garlic-ch',   name: 'Garlic chutney', tamil: 'பூண்டு சட்னி',    cat: 'chutney',       health: ['low-oil'] },
 
-  { id: 's-idli-podi',   name: 'Idli podi',         cat: 'podi',          health: [] },
-  { id: 's-paruppu-podi', name: 'Paruppu podi',     cat: 'podi',          health: ['protein'] },
-  { id: 's-thogayal',    name: 'Paruppu thogayal',  cat: 'podi',          health: ['protein'] },
+  { id: 's-idli-podi',   name: 'Idli podi', tamil: 'இட்லி பொடி',         cat: 'podi',          health: [] },
+  { id: 's-paruppu-podi', name: 'Paruppu podi', tamil: 'பருப்பு பொடி',     cat: 'podi',          health: ['protein'] },
+  { id: 's-thogayal',    name: 'Paruppu thogayal', tamil: 'பருப்பு தொகையல்',  cat: 'podi',          health: ['protein'] },
 
-  { id: 's-veg-kurma',   name: 'Veg kurma',         cat: 'gravy',         health: [] },
-  { id: 's-channa',      name: 'Channa masala',     cat: 'gravy',         health: ['protein', 'fibre'] },
-  { id: 's-dal-fry',     name: 'Dal fry',           cat: 'gravy',         health: ['protein'] },
-  { id: 's-potato-masala', name: 'Potato masala',   cat: 'gravy',         health: [] },
-  { id: 's-coconut-milk', name: 'Coconut milk',     cat: 'gravy',         health: [] },
-  { id: 's-sodhi',       name: 'Sodhi',             cat: 'gravy',         health: ['low-oil'] },
-  { id: 's-veg-stew',    name: 'Veg stew',          cat: 'gravy',         health: ['low-oil', 'fibre'] },
-  { id: 's-veg-salna',   name: 'Veg salna',         cat: 'gravy',         health: [] },
-  { id: 's-kadala',      name: 'Kadala curry',      cat: 'gravy',         health: ['protein', 'fibre'] },
+  { id: 's-veg-kurma',   name: 'Veg kurma', tamil: 'காய்கறி குருமா',         cat: 'gravy',         health: [] },
+  { id: 's-channa',      name: 'Channa masala', tamil: 'சென்னா மசாலா',     cat: 'gravy',         health: ['protein', 'fibre'] },
+  { id: 's-dal-fry',     name: 'Dal fry', tamil: 'பருப்பு ஃப்ரை',           cat: 'gravy',         health: ['protein'] },
+  { id: 's-potato-masala', name: 'Potato masala', tamil: 'உருளைக்கிழங்கு மசாலா',   cat: 'gravy',         health: [] },
+  { id: 's-coconut-milk', name: 'Coconut milk', tamil: 'தேங்காய் பால்',     cat: 'gravy',         health: [] },
+  { id: 's-sodhi',       name: 'Sodhi', tamil: 'சோதி',             cat: 'gravy',         health: ['low-oil'] },
+  { id: 's-veg-stew',    name: 'Veg stew', tamil: 'காய்கறி ஸ்டூ',          cat: 'gravy',         health: ['low-oil', 'fibre'] },
+  { id: 's-veg-salna',   name: 'Veg salna', tamil: 'காய்கறி சால்னா',         cat: 'gravy',         health: [] },
+  { id: 's-kadala',      name: 'Kadala curry', tamil: 'கடலை கறி',      cat: 'gravy',         health: ['protein', 'fibre'] },
 
-  { id: 's-beans-p',     name: 'Beans poriyal',     cat: 'poriyal',       health: ['fibre', 'low-oil'] },
-  { id: 's-cabbage-p',   name: 'Cabbage poriyal',   cat: 'poriyal',       health: ['fibre', 'low-oil'] },
-  { id: 's-carrot-p',    name: 'Carrot poriyal',    cat: 'poriyal',       health: ['fibre', 'low-oil'] },
-  { id: 's-beetroot-p',  name: 'Beetroot poriyal',  cat: 'poriyal',       health: ['fibre'] },
-  { id: 's-keerai-p',    name: 'Keerai poriyal',    cat: 'poriyal',       health: ['fibre', 'low-oil'] },
-  { id: 's-avarakkai-p', name: 'Avarakkai poriyal', cat: 'poriyal',       health: ['fibre'] },
-  { id: 's-chow-p',      name: 'Chow chow poriyal', cat: 'poriyal',       health: ['fibre', 'low-oil'] },
-  { id: 's-potato-fry',  name: 'Potato fry',        cat: 'poriyal',       health: [] },
+  { id: 's-beans-p',     name: 'Beans poriyal', tamil: 'பீன்ஸ் பொரியல்',     cat: 'poriyal',       health: ['fibre', 'low-oil'] },
+  { id: 's-cabbage-p',   name: 'Cabbage poriyal', tamil: 'முட்டைகோஸ் பொரியல்',   cat: 'poriyal',       health: ['fibre', 'low-oil'] },
+  { id: 's-carrot-p',    name: 'Carrot poriyal', tamil: 'கேரட் பொரியல்',    cat: 'poriyal',       health: ['fibre', 'low-oil'] },
+  { id: 's-beetroot-p',  name: 'Beetroot poriyal', tamil: 'பீட்ரூட் பொரியல்',  cat: 'poriyal',       health: ['fibre'] },
+  { id: 's-keerai-p',    name: 'Keerai poriyal', tamil: 'கீரை பொரியல்',    cat: 'poriyal',       health: ['fibre', 'low-oil'] },
+  { id: 's-avarakkai-p', name: 'Avarakkai poriyal', tamil: 'அவரைக்காய் பொரியல்', cat: 'poriyal',       health: ['fibre'] },
+  { id: 's-chow-p',      name: 'Chow chow poriyal', tamil: 'சௌ சௌ பொரியல்', cat: 'poriyal',       health: ['fibre', 'low-oil'] },
+  { id: 's-potato-fry',  name: 'Potato fry', tamil: 'உருளைக்கிழங்கு வறுவல்',        cat: 'poriyal',       health: [] },
 
-  { id: 's-pumpkin-k',   name: 'Pumpkin kootu',     cat: 'kootu',         health: ['fibre'] },
-  { id: 's-chow-k',      name: 'Chow chow kootu',   cat: 'kootu',         health: ['fibre', 'low-oil'] },
-  { id: 's-cabbage-k',   name: 'Cabbage kootu',     cat: 'kootu',         health: ['fibre'] },
-  { id: 's-keerai-k',    name: 'Keerai kootu',      cat: 'kootu',         health: ['fibre', 'protein'] },
-  { id: 's-avial',       name: 'Avial',             cat: 'kootu',         health: ['fibre'] },
+  { id: 's-pumpkin-k',   name: 'Pumpkin kootu', tamil: 'பரங்கிக்காய் கூட்டு',     cat: 'kootu',         health: ['fibre'] },
+  { id: 's-chow-k',      name: 'Chow chow kootu', tamil: 'சௌ சௌ கூட்டு',   cat: 'kootu',         health: ['fibre', 'low-oil'] },
+  { id: 's-cabbage-k',   name: 'Cabbage kootu', tamil: 'முட்டைகோஸ் கூட்டு',     cat: 'kootu',         health: ['fibre'] },
+  { id: 's-keerai-k',    name: 'Keerai kootu', tamil: 'கீரை கூட்டு',      cat: 'kootu',         health: ['fibre', 'protein'] },
+  { id: 's-avial',       name: 'Avial', tamil: 'அவியல்',             cat: 'kootu',         health: ['fibre'] },
 
-  { id: 's-curd',        name: 'Curd',              cat: 'accompaniment', health: ['protein'] },
-  { id: 's-buttermilk',  name: 'Buttermilk',        cat: 'accompaniment', health: ['low-oil'] },
-  { id: 's-appalam',     name: 'Appalam',           cat: 'accompaniment', health: [] },
-  { id: 's-sutta-appalam', name: 'Sutta appalam',   cat: 'accompaniment', health: ['no-fry', 'low-oil'] },
-  { id: 's-pickle',      name: 'Pickle',            cat: 'accompaniment', health: [] },
-  { id: 's-vathal',      name: 'Vathal',            cat: 'accompaniment', health: [] },
-  { id: 's-onion-raita', name: 'Onion raita',       cat: 'accompaniment', health: ['low-oil'] },
-  { id: 's-salad',       name: 'Kosumalli salad',   cat: 'accompaniment', health: ['fibre', 'no-fry', 'low-oil'] },
+  { id: 's-curd',        name: 'Curd', tamil: 'தயிர்',              cat: 'accompaniment', health: ['protein'] },
+  { id: 's-buttermilk',  name: 'Buttermilk', tamil: 'மோர்',        cat: 'accompaniment', health: ['low-oil'] },
+  { id: 's-appalam',     name: 'Appalam', tamil: 'அப்பளம்',           cat: 'accompaniment', health: [] },
+  { id: 's-sutta-appalam', name: 'Sutta appalam', tamil: 'சுட்ட அப்பளம்',   cat: 'accompaniment', health: ['no-fry', 'low-oil'] },
+  { id: 's-pickle',      name: 'Pickle', tamil: 'ஊறுகாய்',            cat: 'accompaniment', health: [] },
+  { id: 's-vathal',      name: 'Vathal', tamil: 'வத்தல்',            cat: 'accompaniment', health: [] },
+  { id: 's-onion-raita', name: 'Onion raita', tamil: 'வெங்காய பச்சடி',       cat: 'accompaniment', health: ['low-oil'] },
+  { id: 's-salad',       name: 'Kosumalli salad', tamil: 'கோசுமல்லி',   cat: 'accompaniment', health: ['fibre', 'no-fry', 'low-oil'] },
 
-  { id: 's-medu-vada',   name: 'Medu vada',         cat: 'extra',         health: [] },
-  { id: 's-ketchup',     name: 'Tomato ketchup',    cat: 'extra',         health: [] },
-  { id: 's-garlic-bread', name: 'Garlic bread',     cat: 'extra',         health: [] },
-  { id: 's-corn-soup',   name: 'Sweet corn soup',   cat: 'extra',         health: ['low-oil'] },
-  { id: 's-manchurian',  name: 'Gobi manchurian',   cat: 'extra',         health: [] },
-  { id: 's-banana',      name: 'Banana',            cat: 'extra',         health: ['fibre', 'no-fry'] },
-  { id: 's-milk',        name: 'Milk',              cat: 'extra',         health: ['protein'] },
-  { id: 's-honey',       name: 'Honey',             cat: 'extra',         health: [] },
-  { id: 's-jaggery',     name: 'Jaggery',           cat: 'extra',         health: [] },
-  { id: 's-sprouts',     name: 'Sprouts',           cat: 'extra',         health: ['protein', 'fibre', 'no-fry'] },
-  { id: 's-nuts',        name: 'Dates & nuts',      cat: 'extra',         health: ['protein', 'no-fry'] }
+  { id: 's-medu-vada',   name: 'Medu vada', tamil: 'மெது வடை',         cat: 'extra',         health: [] },
+  { id: 's-ketchup',     name: 'Tomato ketchup', tamil: 'தக்காளி சாஸ்',    cat: 'extra',         health: [] },
+  { id: 's-garlic-bread', name: 'Garlic bread', tamil: 'பூண்டு ரொட்டி',     cat: 'extra',         health: [] },
+  { id: 's-corn-soup',   name: 'Sweet corn soup', tamil: 'ஸ்வீட் கார்ன் சூப்',   cat: 'extra',         health: ['low-oil'] },
+  { id: 's-manchurian',  name: 'Gobi manchurian', tamil: 'கோபி மஞ்சூரியன்',   cat: 'extra',         health: [] },
+  { id: 's-banana',      name: 'Banana', tamil: 'வாழைப்பழம்',            cat: 'extra',         health: ['fibre', 'no-fry'] },
+  { id: 's-milk',        name: 'Milk', tamil: 'பால்',              cat: 'extra',         health: ['protein'] },
+  { id: 's-honey',       name: 'Honey', tamil: 'தேன்',             cat: 'extra',         health: [] },
+  { id: 's-jaggery',     name: 'Jaggery', tamil: 'வெல்லம்',           cat: 'extra',         health: [] },
+  { id: 's-sprouts',     name: 'Sprouts', tamil: 'முளைகட்டிய பயறு',           cat: 'extra',         health: ['protein', 'fibre', 'no-fry'] },
+  { id: 's-nuts',        name: 'Dates & nuts', tamil: 'பேரீச்சை & நட்ஸ்',      cat: 'extra',         health: ['protein', 'no-fry'] }
 ];
 
 /* ---------------- protein add-ons ---------------- */
 /* These sit BESIDE the veg base, never instead of it. */
 
 var ADDONS = [
-  { id: 'a-boiled-egg',  name: 'Boiled egg',       kind: 'egg',     meals: ['breakfast', 'lunch', 'dinner'], mins: 10, health: ['protein', 'no-fry'] },
-  { id: 'a-egg-poriyal', name: 'Egg poriyal',      kind: 'egg',     meals: ['lunch', 'dinner'],              mins: 15, health: ['protein'] },
-  { id: 'a-egg-masala',  name: 'Egg masala',       kind: 'egg',     meals: ['lunch', 'dinner'],              mins: 20, health: ['protein'] },
-  { id: 'a-omelette',    name: 'Omelette',         kind: 'egg',     meals: ['breakfast', 'dinner'],          mins: 10, health: ['protein'] },
-  { id: 'a-egg-kuzhambu', name: 'Egg kuzhambu',    kind: 'egg',     meals: ['lunch'],                        mins: 25, health: ['protein'] },
+  { id: 'a-boiled-egg',  name: 'Boiled egg', tamil: 'வேகவைத்த முட்டை',       kind: 'egg',     meals: ['breakfast', 'lunch', 'dinner'], mins: 10, health: ['protein', 'no-fry'] },
+  { id: 'a-egg-poriyal', name: 'Egg poriyal', tamil: 'முட்டை பொரியல்',      kind: 'egg',     meals: ['lunch', 'dinner'],              mins: 15, health: ['protein'] },
+  { id: 'a-egg-masala',  name: 'Egg masala', tamil: 'முட்டை மசாலா',       kind: 'egg',     meals: ['lunch', 'dinner'],              mins: 20, health: ['protein'] },
+  { id: 'a-omelette',    name: 'Omelette', tamil: 'ஆம்லெட்',         kind: 'egg',     meals: ['breakfast', 'dinner'],          mins: 10, health: ['protein'] },
+  { id: 'a-egg-kuzhambu', name: 'Egg kuzhambu', tamil: 'முட்டை குழம்பு',    kind: 'egg',     meals: ['lunch'],                        mins: 25, health: ['protein'] },
 
-  { id: 'a-chicken-curry', name: 'Chicken curry',  kind: 'chicken', meals: ['lunch', 'dinner'],              mins: 35, health: ['protein'] },
-  { id: 'a-chicken-chukka', name: 'Chicken chukka', kind: 'chicken', meals: ['lunch', 'dinner'],             mins: 35, health: ['protein'] },
-  { id: 'a-chicken-65',  name: 'Chicken 65',       kind: 'chicken', meals: ['lunch', 'dinner'],              mins: 30, health: ['protein'] },
-  { id: 'a-pepper-chicken', name: 'Pepper chicken', kind: 'chicken', meals: ['lunch', 'dinner'],             mins: 35, health: ['protein', 'low-oil'] },
+  { id: 'a-chicken-curry', name: 'Chicken curry', tamil: 'சிக்கன் கறி',  kind: 'chicken', meals: ['lunch', 'dinner'],              mins: 35, health: ['protein'] },
+  { id: 'a-chicken-chukka', name: 'Chicken chukka', tamil: 'சிக்கன் சுக்கா', kind: 'chicken', meals: ['lunch', 'dinner'],             mins: 35, health: ['protein'] },
+  { id: 'a-chicken-65',  name: 'Chicken 65', tamil: 'சிக்கன் 65',       kind: 'chicken', meals: ['lunch', 'dinner'],              mins: 30, health: ['protein'] },
+  { id: 'a-pepper-chicken', name: 'Pepper chicken', tamil: 'மிளகு சிக்கன்', kind: 'chicken', meals: ['lunch', 'dinner'],             mins: 35, health: ['protein', 'low-oil'] },
 
-  { id: 'a-meen-kuzhambu', name: 'Meen kuzhambu',  kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 35, health: ['protein'] },
-  { id: 'a-meen-varuval', name: 'Meen varuval',    kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 25, health: ['protein'] },
-  { id: 'a-nethili-fry', name: 'Nethili fry',      kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 20, health: ['protein'] },
+  { id: 'a-meen-kuzhambu', name: 'Meen kuzhambu', tamil: 'மீன் குழம்பு',  kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 35, health: ['protein'] },
+  { id: 'a-meen-varuval', name: 'Meen varuval', tamil: 'மீன் வறுவல்',    kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 25, health: ['protein'] },
+  { id: 'a-nethili-fry', name: 'Nethili fry', tamil: 'நெத்திலி வறுவல்',      kind: 'fish',    meals: ['lunch', 'dinner'],              mins: 20, health: ['protein'] },
 
-  { id: 'a-mutton-kuzhambu', name: 'Mutton kuzhambu', kind: 'mutton', meals: ['lunch'],                      mins: 50, health: ['protein'] },
-  { id: 'a-mutton-chukka', name: 'Mutton chukka',  kind: 'mutton',  meals: ['lunch', 'dinner'],              mins: 50, health: ['protein'] },
+  { id: 'a-mutton-kuzhambu', name: 'Mutton kuzhambu', tamil: 'மட்டன் குழம்பு', kind: 'mutton', meals: ['lunch'],                      mins: 50, health: ['protein'] },
+  { id: 'a-mutton-chukka', name: 'Mutton chukka', tamil: 'மட்டன் சுக்கா',  kind: 'mutton',  meals: ['lunch', 'dinner'],              mins: 50, health: ['protein'] },
 
-  { id: 'a-prawn-thokku', name: 'Prawn thokku',    kind: 'prawn',   meals: ['lunch', 'dinner'],              mins: 30, health: ['protein'] }
+  { id: 'a-prawn-thokku', name: 'Prawn thokku', tamil: 'இறால் தொக்கு',    kind: 'prawn',   meals: ['lunch', 'dinner'],              mins: 30, health: ['protein'] }
 ];

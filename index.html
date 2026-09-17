@@ -16,7 +16,7 @@
 </head>
 <body class="is-booting">
 
-<div class="boot" id="boot"><span class="boot-spin"></span>Opening your menu…</div>
+<div class="boot" id="boot"><span class="boot-spin"></span><span data-i18n="app.boot">Opening your menu…</span></div>
 
 <!-- Icon sprite: inline SVG rather than emoji, which render differently
      on every platform and read as placeholders. These inherit colour. -->
@@ -87,31 +87,39 @@
   <section class="screen setup" id="screen-setup" hidden>
 
     <div class="setup-inner">
-      <div id="setup-step-1">
-        <p class="eyebrow">One quick thing</p>
-        <h1 class="page-title">What does your house eat?</h1>
-        <p class="page-sub">Vegetarian food is always cooked either way. This just decides what gets added beside it.</p>
+      <div id="setup-step-0">
+        <p class="eyebrow" data-i18n="setup.lang.eyebrow">Before anything else</p>
+        <h1 class="page-title" data-i18n="setup.lang.title">Which language?</h1>
+        <p class="page-sub" data-i18n="setup.lang.hint">You can change this any time in Settings.</p>
+
+        <div class="opts" id="setup-langs"></div>
+      </div>
+
+      <div id="setup-step-1" hidden>
+        <p class="eyebrow" data-i18n="setup.step1.eyebrow">One quick thing</p>
+        <h1 class="page-title" data-i18n="setup.step1.title">What does your house eat?</h1>
+        <p class="page-sub" data-i18n="setup.step1.hint">Vegetarian food is always cooked either way. This just decides what gets added beside it.</p>
 
         <div class="opts">
           <button class="opt" data-diet="veg">
-            <span class="opt-name">Pure vegetarian</span>
-            <span class="opt-sub">No egg, no meat</span>
+            <span class="opt-name" data-i18n="setup.veg">Pure vegetarian</span>
+            <span class="opt-sub" data-i18n="setup.veg.sub">No egg, no meat</span>
           </button>
           <button class="opt" data-diet="egg">
-            <span class="opt-name">Vegetarian and egg</span>
-            <span class="opt-sub">Egg, but no meat</span>
+            <span class="opt-name" data-i18n="setup.egg">Vegetarian and egg</span>
+            <span class="opt-sub" data-i18n="setup.egg.sub">Egg, but no meat</span>
           </button>
           <button class="opt" data-diet="nonveg">
-            <span class="opt-name">We eat non-veg too</span>
-            <span class="opt-sub">Chicken, fish, mutton</span>
+            <span class="opt-name" data-i18n="setup.nonveg">We eat non-veg too</span>
+            <span class="opt-sub" data-i18n="setup.nonveg.sub">Chicken, fish, mutton</span>
           </button>
         </div>
       </div>
 
       <div id="setup-step-2" hidden>
-        <p class="eyebrow">Last one</p>
-        <h1 class="page-title" id="setup-q2">How often?</h1>
-        <p class="page-sub">A rough starting point. You can set exact days later.</p>
+        <p class="eyebrow" data-i18n="setup.step2.eyebrow">Last one</p>
+        <h1 class="page-title" id="setup-q2" data-i18n="setup.step2.title">How often?</h1>
+        <p class="page-sub" data-i18n="setup.step2.hint">A rough starting point. You can set exact days later.</p>
 
         <div class="opts" id="setup-freq"></div>
 
@@ -119,13 +127,13 @@
           <input type="checkbox" id="setup-egg">
           <span class="box"><svg class="icon icon-sm"><use href="#i-check"/></svg></span>
           <span>
-            <strong>Egg with lunch, every day</strong>
-            <em>Some houses make this compulsory for the children.</em>
+            <strong data-i18n="setup.eggDaily">Egg with lunch, every day</strong>
+            <em data-i18n="setup.eggDaily.sub">Some houses make this compulsory for the children.</em>
           </span>
         </label>
       </div>
 
-      <button class="btn btn-quiet setup-skip" id="setup-skip">Skip, just show me a plan</button>
+      <button class="btn btn-quiet setup-skip" id="setup-skip" data-i18n="setup.skip">Skip, just show me a plan</button>
     </div>
 
   </section>
@@ -136,18 +144,18 @@
       <div class="head-row">
         <div>
           <p class="eyebrow" id="today-eyebrow">Good morning</p>
-          <h1 class="page-title" id="today-title">Today</h1>
+          <h1 class="page-title" id="today-title" data-i18n="today.title">Today</h1>
           <p class="page-sub" id="today-date"></p>
         </div>
-        <button class="btn btn-icon" id="btn-share-day" title="Share this day" aria-label="Share this day">
+        <button class="btn btn-icon" id="btn-share-day" data-i18n-title="today.share" data-i18n-aria="today.share">
           <svg class="icon"><use href="#i-share"/></svg>
         </button>
-        <button class="btn btn-icon" id="btn-new-day" title="New ideas for this day" aria-label="New ideas for this day">
+        <button class="btn btn-icon" id="btn-new-day" data-i18n-title="today.reroll" data-i18n-aria="today.reroll">
           <svg class="icon"><use href="#i-shuffle"/></svg>
         </button>
       </div>
     </header>
-    <div class="day-strip" id="day-strip" role="group" aria-label="Pick a day"></div>
+    <div class="day-strip" id="day-strip" role="group" data-i18n-aria="today.pickDay"></div>
     <div id="today-body"></div>
   </section>
 
@@ -156,49 +164,49 @@
     <header class="page-head">
       <div class="head-row">
         <div>
-          <p class="eyebrow">Twenty-one meals</p>
-          <h1 class="page-title">This week</h1>
+          <p class="eyebrow" data-i18n="week.eyebrow">Twenty-one meals</p>
+          <h1 class="page-title" data-i18n="week.title">This week</h1>
           <p class="page-sub" id="week-range"></p>
         </div>
-        <button class="btn btn-icon" id="btn-share-week" title="Share the week" aria-label="Share the week">
+        <button class="btn btn-icon" id="btn-share-week" data-i18n-title="week.share" data-i18n-aria="week.share">
           <svg class="icon"><use href="#i-share"/></svg>
         </button>
-        <button class="btn btn-icon" id="btn-new-week" title="New plan" aria-label="New plan">
+        <button class="btn btn-icon" id="btn-new-week" data-i18n-title="week.reroll" data-i18n-aria="week.reroll">
           <svg class="icon"><use href="#i-shuffle"/></svg>
         </button>
       </div>
     </header>
-    <div class="rule"><span>Padlock keeps a meal</span></div>
+    <div class="rule"><span data-i18n="week.hint">Padlock keeps a meal</span></div>
     <div id="week-body"></div>
   </section>
 
   <!-- ===================== FOODS ===================== -->
   <section class="screen" id="screen-foods" hidden>
     <header class="page-head">
-      <p class="eyebrow">Your food list</p>
-      <h1 class="page-title">Foods</h1>
-      <p class="page-sub">Tick what your house eats. Anything unticked is never planned.</p>
+      <p class="eyebrow" data-i18n="foods.eyebrow">Your food list</p>
+      <h1 class="page-title" data-i18n="foods.title">Foods</h1>
+      <p class="page-sub" data-i18n="foods.hint">Tick what your house eats. Anything unticked is never planned.</p>
     </header>
 
-    <div class="seg" id="foods-seg" role="tablist" aria-label="Food list">
-      <button data-tab="breakfast" role="tab" aria-selected="true">Breakfast</button>
-      <button data-tab="lunch" role="tab" aria-selected="false">Lunch</button>
-      <button data-tab="dinner" role="tab" aria-selected="false">Dinner</button>
-      <button data-tab="sides" role="tab" aria-selected="false">Sides</button>
-      <button data-tab="protein" role="tab" aria-selected="false">Protein</button>
+    <div class="seg" id="foods-seg" role="tablist" data-i18n-aria="foods.list">
+      <button data-tab="breakfast" role="tab" aria-selected="true" data-i18n="meal.breakfast">Breakfast</button>
+      <button data-tab="lunch" role="tab" aria-selected="false" data-i18n="meal.lunch">Lunch</button>
+      <button data-tab="dinner" role="tab" aria-selected="false" data-i18n="meal.dinner">Dinner</button>
+      <button data-tab="sides" role="tab" aria-selected="false" data-i18n="foods.sides">Sides</button>
+      <button data-tab="protein" role="tab" aria-selected="false" data-i18n="foods.protein">Protein</button>
     </div>
 
     <div class="searchbar">
       <svg class="icon icon-sm"><use href="#i-search"/></svg>
-      <input type="search" id="foods-search" placeholder="Search dishes" aria-label="Search dishes">
+      <input type="search" id="foods-search" data-i18n-placeholder="foods.search" data-i18n-aria="foods.search">
     </div>
 
     <div class="listbar">
       <span class="count" id="foods-count"></span>
-      <button class="btn btn-sm btn-quiet" id="btn-all">All</button>
-      <button class="btn btn-sm btn-quiet" id="btn-none">None</button>
+      <button class="btn btn-sm btn-quiet" id="btn-all" data-i18n="foods.all">All</button>
+      <button class="btn btn-sm btn-quiet" id="btn-none" data-i18n="foods.none">None</button>
       <button class="btn btn-sm btn-primary" id="btn-add">
-        <svg class="icon icon-sm"><use href="#i-plus"/></svg> Add
+        <svg class="icon icon-sm"><use href="#i-plus"/></svg> <span data-i18n="foods.add">Add</span>
       </button>
     </div>
 
@@ -209,104 +217,121 @@
   <!-- ===================== SETTINGS ===================== -->
   <section class="screen" id="screen-settings" hidden>
     <header class="page-head">
-      <p class="eyebrow">How your house eats</p>
-      <h1 class="page-title">Settings</h1>
-      <p class="page-sub">Everything here rebuilds the plan straight away.</p>
+      <p class="eyebrow" data-i18n="settings.eyebrow">How your house eats</p>
+      <h1 class="page-title" data-i18n="settings.title">Settings</h1>
+      <p class="page-sub" data-i18n="settings.hint">Everything here rebuilds the plan straight away.</p>
     </header>
 
-    <div class="rule"><span>Protein timetable</span></div>
+    <div class="rule"><span data-i18n="settings.households">Households</span></div>
+
+    <!-- One app, several houses. Stays out of the way until there is a
+         second one: a single household never sees a list to manage. -->
+    <div class="card card-flush">
+      <div class="houses" id="houses"></div>
+      <button class="btn btn-quiet btn-block" id="btn-add-house">
+        <svg class="icon icon-sm"><use href="#i-plus"/></svg>
+        <span data-i18n="settings.addHouse">Add a house</span>
+      </button>
+    </div>
+
+    <div class="rule"><span data-i18n="settings.language">Language</span></div>
 
     <div class="card card-flush">
-      <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2);line-height:1.45">
-        Tap any meal to say what protein goes <strong>beside</strong> it. The vegetarian food is
-        always cooked — this only adds a dish for whoever eats it.
+      <div class="langs" id="langs"></div>
+    </div>
+
+    <div class="rule"><span data-i18n="settings.protein">Protein timetable</span></div>
+
+    <div class="card card-flush">
+      <p style="margin:0 0 12px;font-size:13px;color:var(--ink-2);line-height:1.45"
+         data-i18n-html="settings.proteinHint">
       </p>
       <button class="btn btn-quiet btn-block setup-again" id="btn-rerun-setup">
-        <svg class="icon icon-sm"><use href="#i-ask"/></svg> Not sure? Answer two questions
+        <svg class="icon icon-sm"><use href="#i-ask"/></svg> <span data-i18n="settings.rerunSetup">Not sure? Answer two questions</span>
       </button>
       <div class="quickfills" id="quickfills"></div>
       <div class="pgrid" id="pgrid"></div>
     </div>
 
-    <div class="rule"><span>Cooking style</span></div>
+    <div class="rule"><span data-i18n="settings.style">Cooking style</span></div>
 
     <div class="card">
       <div class="field">
         <div class="field-text">
-          <h3>Health conscious</h3>
-          <p>Leans the plan towards millets, low-oil and steamed dishes. Nothing is banned — dosai still turns up.</p>
+          <h3 data-i18n="settings.lean">Health conscious</h3>
+          <p data-i18n="settings.leanHint">Leans the plan towards millets, low-oil and steamed dishes. Nothing is banned — dosai still turns up.</p>
         </div>
         <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-lean">
-            <span class="track"></span><span class="sr-only">Health conscious</span>
+            <span class="track"></span><span class="sr-only" data-i18n="settings.lean">Health conscious</span>
           </label>
         </div>
       </div>
 
       <div class="field">
         <div class="field-text">
-          <h3>Light dinners</h3>
-          <p>Soft, low-oil food at night. Nothing heavy or deep-fried after dark.</p>
+          <h3 data-i18n="settings.light">Light dinners</h3>
+          <p data-i18n="settings.lightHint">Soft, low-oil food at night. Nothing heavy or deep-fried after dark.</p>
         </div>
         <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-light" checked>
-            <span class="track"></span><span class="sr-only">Light dinners</span>
+            <span class="track"></span><span class="sr-only" data-i18n="settings.light">Light dinners</span>
           </label>
         </div>
       </div>
 
       <div class="field">
         <div class="field-text">
-          <h3>Quick weekday breakfasts</h3>
-          <p>Nothing over 20 minutes Monday to Friday.</p>
+          <h3 data-i18n="settings.quick">Quick weekday breakfasts</h3>
+          <p data-i18n="settings.quickHint">Nothing over 20 minutes Monday to Friday.</p>
         </div>
         <div class="field-ctl">
           <label class="switch">
             <input type="checkbox" id="opt-quick" checked>
-            <span class="track"></span><span class="sr-only">Quick weekday breakfasts</span>
+            <span class="track"></span><span class="sr-only" data-i18n="settings.quick">Quick weekday breakfasts</span>
           </label>
         </div>
       </div>
 
     </div>
 
-    <div class="rule"><span>Data</span></div>
+    <div class="rule"><span data-i18n="settings.data">Data</span></div>
 
     <div class="card">
       <div class="field field-stack">
         <div class="field-text">
-          <h3>Where this is kept <span class="pill" id="storage-badge">Saved</span></h3>
-          <p id="storage-where">Checking…</p>
+          <h3><span data-i18n="settings.where">Where this is kept</span> <span class="pill" id="storage-badge">Saved</span></h3>
+          <p id="storage-where" data-i18n="settings.checking">Checking…</p>
           <p class="hint" id="storage-note"></p>
         </div>
       </div>
 
       <div class="field">
         <div class="field-text">
-          <h3>Backup</h3>
-          <p>Saves the whole database as one file. The only copy that outlives this browser.</p>
+          <h3 data-i18n="settings.backup">Backup</h3>
+          <p data-i18n="settings.backupHint">Saves the whole database as one file. The only copy that outlives this browser.</p>
         </div>
         <div class="field-ctl field-ctl-pair">
-          <button class="btn" id="btn-backup"><svg class="icon icon-sm"><use href="#i-download"/></svg> Save</button>
-          <button class="btn" id="btn-restore"><svg class="icon icon-sm"><use href="#i-upload"/></svg> Restore</button>
-          <input type="file" id="restore-file" accept=".sqlite3,.db,.json,application/json" hidden>
+          <button class="btn" id="btn-backup"><svg class="icon icon-sm"><use href="#i-download"/></svg> <span data-i18n="settings.save">Save</span></button>
+          <button class="btn" id="btn-restore"><svg class="icon icon-sm"><use href="#i-upload"/></svg> <span data-i18n="settings.restore">Restore</span></button>
+          <input type="file" id="restore-file" accept=".sqlite3,.json" hidden>
         </div>
       </div>
 
       <div class="field">
         <div class="field-text">
-          <h3>Start over</h3>
-          <p>Erases the plan, your food list and your own dishes from this browser.</p>
+          <h3 data-i18n="settings.startOver">Start over</h3>
+          <p data-i18n="settings.startOverHint">Erases the plan, your food list and your own dishes from this browser.</p>
         </div>
         <div class="field-ctl">
-          <button class="btn" id="btn-reset"><svg class="icon icon-sm"><use href="#i-reset"/></svg> Reset</button>
+          <button class="btn" id="btn-reset"><svg class="icon icon-sm"><use href="#i-reset"/></svg> <span data-i18n="settings.reset">Reset</span></button>
         </div>
       </div>
     </div>
 
-    <p class="footnote">
+    <p class="footnote" data-i18n="settings.footnote">
       Everything lives in this browser. No account, no server, nothing leaves your device.
     </p>
   </section>
@@ -314,10 +339,10 @@
 </main>
 
 <nav class="nav" role="tablist" aria-label="Sections">
-  <button id="tab-today" role="tab" aria-selected="true"><svg class="icon icon-lg"><use href="#i-today"/></svg>Today</button>
-  <button id="tab-week" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-week"/></svg>Week</button>
-  <button id="tab-foods" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-foods"/></svg>Foods</button>
-  <button id="tab-settings" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-settings"/></svg>Settings</button>
+  <button id="tab-today" role="tab" aria-selected="true"><svg class="icon icon-lg"><use href="#i-today"/></svg><span data-i18n="nav.today">Today</span></button>
+  <button id="tab-week" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-week"/></svg><span data-i18n="nav.week">Week</span></button>
+  <button id="tab-foods" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-foods"/></svg><span data-i18n="nav.foods">Foods</span></button>
+  <button id="tab-settings" role="tab" aria-selected="false"><svg class="icon icon-lg"><use href="#i-settings"/></svg><span data-i18n="nav.settings">Settings</span></button>
 </nav>
 
 <div class="sheet" id="sheet" hidden>
@@ -331,6 +356,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="js/i18n.js"></script>
 <script src="js/db.js"></script>
 <script src="js/data.js"></script>
 <script src="js/library.js"></script>

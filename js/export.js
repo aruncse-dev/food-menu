@@ -21,8 +21,6 @@ var Exporter = (function () {
   var ROW_H = 152;
   var FOOTER_H = 74;
 
-  var MEAL_LABEL = { breakfast: 'BREAKFAST', lunch: 'LUNCH', dinner: 'DINNER' };
-
   /* The exported image is always light: it gets printed, and it lands
      on someone else's phone in a chat thread. */
   var C = {
@@ -91,7 +89,8 @@ var Exporter = (function () {
     var end = new Date(start);
     end.setDate(start.getDate() + 6);
     var o = { day: 'numeric', month: 'short' };
-    return start.toLocaleDateString('en-GB', o) + ' – ' + end.toLocaleDateString('en-GB', o);
+    return start.toLocaleDateString(I18N.locale(), o) + ' – ' +
+           end.toLocaleDateString(I18N.locale(), o);
   }
 
   function render(canvas, week, opts) {
@@ -122,7 +121,7 @@ var Exporter = (function () {
 
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.font = font(700, 21);
-    ctx.fillText("WHAT'S COOKING", PAD, 62);
+    ctx.fillText(I18N.t('export.brand'), PAD, 62);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = font(700, 48, SERIF);
@@ -148,7 +147,7 @@ var Exporter = (function () {
       ctx.fillStyle = fg;
       ctx.font = font(700, 19);
       ctx.textAlign = 'center';
-      ctx.fillText(MEAL_LABEL[meal], colX(i) + colW / 2, headY + 36);
+      ctx.fillText(I18N.mealName(meal).toUpperCase(), colX(i) + colW / 2, headY + 36);
       ctx.textAlign = 'left';
     });
 
@@ -167,11 +166,11 @@ var Exporter = (function () {
 
       ctx.fillStyle = weekend ? C.chilli : C.soft;
       ctx.font = font(700, 25, SERIF);
-      ctx.fillText(row.day, PAD + 14, y + 46);
+      ctx.fillText(I18N.dayShort(row.day), PAD + 14, y + 46);
 
       ctx.fillStyle = C.faint;
       ctx.font = font(600, 16);
-      ctx.fillText(weekend ? 'weekend' : 'weekday', PAD + 14, y + 70);
+      ctx.fillText(I18N.t(weekend ? 'export.weekend' : 'export.weekday'), PAD + 14, y + 70);
 
       MEAL_ORDER.forEach(function (meal, ci) {
         var slot = row[meal];
@@ -199,7 +198,7 @@ var Exporter = (function () {
         /* dish name */
         ctx.fillStyle = C.ink;
         ctx.font = font(700, 24, SERIF);
-        wrap(ctx, slot.main, inner, 2).forEach(function (line) {
+        wrap(ctx, I18N.dish('main', slot.id, slot.main), inner, 2).forEach(function (line) {
           ctx.fillText(line, tx, ty);
           ty += 28;
         });
@@ -207,7 +206,7 @@ var Exporter = (function () {
         /* the protein, called out — it is what people scan for */
         if (slot.addon) {
           ctx.font = font(700, 17);
-          var label = slot.addon.name;
+          var label = I18N.addonName(slot.addon);
           var lw = Math.min(ctx.measureText(label).width, inner - 22);
           ctx.fillStyle = C.chilliBg;
           roundRect(ctx, tx, ty - 15, lw + 22, 26, 7);
@@ -225,7 +224,7 @@ var Exporter = (function () {
           ctx.fillStyle = C.soft;
           ctx.font = font(400, 17);
           var room = Math.max(1, Math.floor((y + h - 12 - ty) / 21));
-          wrap(ctx, slot.sides.map(function (s) { return s.name; }).join(' · '), inner, Math.min(room, 3))
+          wrap(ctx, I18N.sideNames(slot.sides).join(' · '), inner, Math.min(room, 3))
             .forEach(function (line) {
               ctx.fillText(line, tx, ty);
               ty += 21;
@@ -236,7 +235,7 @@ var Exporter = (function () {
         ctx.fillStyle = C.faint;
         ctx.font = font(600, 16);
         ctx.textAlign = 'right';
-        ctx.fillText(slot.mins + ' min', x + colW - 14, y + h - 12);
+        ctx.fillText(I18N.minutes(slot.mins), x + colW - 14, y + h - 12);
         ctx.textAlign = 'left';
       });
 
@@ -245,7 +244,7 @@ var Exporter = (function () {
 
     ctx.fillStyle = C.faint;
     ctx.font = font(400, 19);
-    ctx.fillText('Planned at home · one less thing to argue about', PAD, y + 34);
+    ctx.fillText(I18N.t('export.footer'), PAD, y + 34);
 
     return canvas;
   }
@@ -254,10 +253,10 @@ var Exporter = (function () {
 
   function slotText(slot) {
     if (!slot) { return '—'; }
-    var s = slot.main;
-    if (slot.addon) { s += ' + ' + slot.addon.name; }
+    var s = I18N.dish('main', slot.id, slot.main);
+    if (slot.addon) { s += ' + ' + I18N.addonName(slot.addon); }
     if (slot.sides && slot.sides.length) {
-      s += ' (' + slot.sides.map(function (x) { return x.name; }).join(', ') + ')';
+      s += ' (' + I18N.sideNames(slot.sides).join(', ') + ')';
     }
     return s;
   }
@@ -268,10 +267,9 @@ var Exporter = (function () {
     var out = [title || 'Menu for the week', ''];
 
     week.forEach(function (row) {
-      out.push((DAY_FULL[row.day] || row.day).toUpperCase());
+      out.push(I18N.dayName(row.day).toUpperCase());
       MEAL_ORDER.forEach(function (meal) {
-        out.push('  ' + MEAL_LABEL[meal].charAt(0) +
-                 MEAL_LABEL[meal].slice(1).toLowerCase() + ': ' + slotText(row[meal]));
+        out.push('  ' + I18N.mealName(meal) + ': ' + slotText(row[meal]));
       });
       out.push('');
     });
