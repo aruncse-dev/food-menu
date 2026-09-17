@@ -45,8 +45,12 @@ There is no special case for any of them.
 ## Setup
 
 First run asks two questions — what the house eats, and roughly how often — then shows a plan.
-Both answers are editable afterwards in Settings, so neither is a decision anyone can get wrong.
 There is a skip button.
+
+The same two questions live in Settings under **Not sure? Answer two questions**, because a house
+changes: someone starts eating egg, a month of fasting comes round, a child turns vegetarian.
+Re-running it rewrites only the protein timetable — the food list, what you have unticked and your
+own dishes are all left alone — and cancelling changes nothing.
 
 ## The screens
 

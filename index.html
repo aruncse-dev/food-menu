@@ -61,6 +61,11 @@
     <symbol id="i-trash" viewBox="0 0 24 24">
       <path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13M9 7V4h6v3"/>
     </symbol>
+    <symbol id="i-ask" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M9.6 9.6a2.6 2.6 0 015 .9c0 1.7-2.6 2-2.6 3.6"/>
+      <circle cx="12" cy="17.4" r="1" fill="currentColor" stroke="none"/>
+    </symbol>
     <symbol id="i-leaf" viewBox="0 0 24 24">
       <path d="M4 20C3 12 8 5 20 4c1 11-5 16-13 15z"/><path d="M4 20c4-6 8-9 12-10"/>
     </symbol>
@@ -224,6 +229,9 @@
         Tap any meal to say what protein goes <strong>beside</strong> it. The vegetarian food is
         always cooked — this only adds a dish for whoever eats it.
       </p>
+      <button class="btn btn-quiet btn-block setup-again" id="btn-rerun-setup">
+        <svg class="icon icon-sm"><use href="#i-ask"/></svg> Not sure? Answer two questions
+      </button>
       <div class="quickfills" id="quickfills"></div>
       <div class="pgrid" id="pgrid"></div>
     </div>

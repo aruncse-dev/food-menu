@@ -779,24 +779,35 @@
     ]
   };
 
-  function startSetup() {
+  /* Where to go when the questions are done. null means first run,
+     which lands on Today; otherwise back where it was opened from. */
+  var setupReturn = null;
+
+  /* Bound once, in init. Binding inside startSetup would stack a fresh
+     handler on every visit now that Settings can reopen it. */
+  function bindSetup() {
+    Array.prototype.forEach.call($('screen-setup').querySelectorAll('[data-diet]'), function (b) {
+      b.addEventListener('click', function () { chooseDiet(b.getAttribute('data-diet')); });
+    });
+    $('setup-skip').addEventListener('click', function () { finishSetup(false); });
+  }
+
+  function startSetup(from) {
+    setupReturn = from || null;
     document.body.classList.add('is-setup');
     $('screen-setup').hidden = false;
     $('setup-step-1').hidden = false;
     $('setup-step-2').hidden = true;
-
-    Array.prototype.forEach.call($('screen-setup').querySelectorAll('[data-diet]'), function (b) {
-      b.addEventListener('click', function () { chooseDiet(b.getAttribute('data-diet')); });
-    });
-
-    $('setup-skip').addEventListener('click', function () { finishSetup(); });
+    $('setup-egg').checked = false;
+    $('setup-skip').textContent = from ? 'Cancel' : 'Skip, just show me a plan';
+    window.scrollTo(0, 0);
   }
 
   function chooseDiet(diet) {
     /* Pure vegetarian has nothing left to ask. */
     if (diet === 'veg') {
       state.settings.protein = Planner.emptyProtein();
-      finishSetup();
+      finishSetup(true);
       return;
     }
 
@@ -820,20 +831,33 @@
           DAY_NAMES.forEach(function (d) { if (grid[d].lunch === 'veg') { grid[d].lunch = 'egg'; } });
         }
         state.settings.protein = grid;
-        finishSetup();
+        finishSetup(true);
       });
       box.appendChild(b);
     });
   }
 
-  function finishSetup() {
+  /* `applied` false means cancelled or skipped: the plan already
+     generated at start-up stands, and nothing is overwritten. */
+  function finishSetup(applied) {
     document.body.classList.remove('is-setup');
     $('screen-setup').hidden = true;
-    state.week = Planner.generateWeek(state.settings, {}, null);
-    save();
-    syncSettings();
-    renderAll();
-    showScreen('today');
+
+    if (applied) {
+      state.week = Planner.generateWeek(state.settings, state.locked, state.week);
+      save();
+      syncSettings();
+      renderAll();
+    }
+
+    if (setupReturn) {
+      showScreen(setupReturn);
+      if (applied) { toast('Protein timetable updated'); }
+    } else {
+      showScreen('today');
+    }
+
+    setupReturn = null;
   }
 
   function init() {
@@ -943,6 +967,9 @@
       toast('Back to defaults');
     });
 
+    $('btn-rerun-setup').addEventListener('click', function () { startSetup('settings'); });
+
+    bindSetup();
     renderQuickfills();
     syncSettings();
     renderAll();

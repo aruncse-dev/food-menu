@@ -467,6 +467,7 @@ body {
 .pcell.on { background: var(--chilli-bg); border-color: var(--chilli); color: var(--chilli); }
 
 .quickfills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.setup-again { margin-bottom: 10px; font-size: 13.5px; white-space: nowrap; }
 
 /* ---------- foods screen ---------- */
 
